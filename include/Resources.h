@@ -6,7 +6,7 @@
 
 //shaders
 #define SSAO_VERT                       CINDER_RESOURCE( ../resources/shaders/, SSAO_glsl.vert, 129, GLSL )
-#define SSAO_FRAGT						CINDER_RESOURCE( ../resources/shaders/, SSAO_glsl.frag, 130, GLSL )
+#define SSAO_FRAG						CINDER_RESOURCE( ../resources/shaders/, SSAO_glsl.frag, 130, GLSL )
 //#define SSAO_FRAG                       CINDER_RESOURCE( ../resources/shaders/, SSAO_unused_glsl.frag, 130, GLSL )
 
 #define DEFER_VERT                      CINDER_RESOURCE( ../resources/shaders/, Deferred_glsl.vert, 131, GLSL )

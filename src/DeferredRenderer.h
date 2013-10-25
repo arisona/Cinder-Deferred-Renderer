@@ -214,7 +214,7 @@ public:
 		mRandomNoise = gl::Texture(loadImage(loadResource(NOISE_SAMPLER))); //noise texture required for SSAO calculations
 		
 		// init shaders
-		mSSAOShader			= gl::GlslProg(loadResource(SSAO_VERT), loadResource(SSAO_FRAG_LIGHT));
+		mSSAOShader			= gl::GlslProg(loadResource(SSAO_VERT), loadResource(SSAO_FRAG));
 		mDeferredShader		= gl::GlslProg(loadResource(DEFER_VERT), loadResource(DEFER_FRAG));
 		mBasicBlender		= gl::GlslProg(loadResource(BBlender_VERT), loadResource(BBlender_FRAG));
 		mHBlurShader		= gl::GlslProg(loadResource(BLUR_H_VERT), loadResource(BLUR_H_FRAG));
