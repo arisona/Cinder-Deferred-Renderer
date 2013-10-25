@@ -41,11 +41,11 @@ private:
 	gl::GlslProg mCubeShadowShader;
 	gl::GlslProg mLightShader;
 	gl::GlslProg mSSAOShader;
-	gl::GlslProg mBlenderShader;
 	gl::GlslProg mHBlurShader;
 	gl::GlslProg mVBlurShader;
-	gl::GlslProg mAlphaToRBGShader;
+	gl::GlslProg mBlenderShader;
 	gl::GlslProg mFXAAShader;
+	gl::GlslProg mAlphaToRBGShader;
 
 	gl::Fbo mDeferredFBO;
 	gl::Fbo mShadowFBO;
@@ -127,12 +127,13 @@ public:
 		mDeferredShader		= gl::GlslProg(loadResource(SHADER_DEFER_VERT), loadResource(SHADER_DEFER_FRAG));
 		mCubeShadowShader	= gl::GlslProg(loadResource(SHADER_CUBESHADOW_VERT), loadResource(SHADER_CUBESHADOW_FRAG));
 		mLightShader		= gl::GlslProg(loadResource(SHADER_LIGHT_VERT), loadResource(SHADER_LIGHT_FRAG));
-		mSSAOShader			= gl::GlslProg(loadResource(SHADER_SSAO_VERT), loadResource(SHADER_SSAO_FRAG));
-		mBlenderShader		= gl::GlslProg(loadResource(SHADER_BLENDER_VERT), loadResource(SHADER_BLENDER_FRAG));
-		mHBlurShader		= gl::GlslProg(loadResource(SHADER_BLUR_H_VERT), loadResource(SHADER_BLUR_H_FRAG));
-		mVBlurShader		= gl::GlslProg(loadResource(SHADER_BLUR_V_VERT), loadResource(SHADER_BLUR_V_FRAG));
-		mAlphaToRBGShader	= gl::GlslProg(loadResource(SHADER_ALPHA_RGB_VERT), loadResource(SHADER_ALPHA_RGB_FRAG));
-		mFXAAShader			= gl::GlslProg(loadResource(SHADER_FXAA_VERT), loadResource(SHADER_FXAA_FRAG));
+		mSSAOShader			= gl::GlslProg(ssuvVert, loadResource(SHADER_SSAO_FRAG));
+		mHBlurShader		= gl::GlslProg(ssuvVert, loadResource(SHADER_BLUR_H_FRAG));
+		mVBlurShader		= gl::GlslProg(ssuvVert, loadResource(SHADER_BLUR_V_FRAG));
+		mBlenderShader		= gl::GlslProg(ssuvVert, loadResource(SHADER_BLENDER_FRAG));
+		mFXAAShader			= gl::GlslProg(ssuvVert, loadResource(SHADER_FXAA_FRAG));
+
+		mAlphaToRBGShader	= gl::GlslProg(ssuvVert, loadResource(SHADER_ALPHA_RGB_FRAG));
 		
 		// init FBOs
 		//this FBO will capture normals, depth, and base diffuse in one render pass (as opposed to three)
@@ -182,7 +183,7 @@ public:
         renderLightsToFBO();
         renderSSAOToFBO();
 		
-        // deferred rendering, depending on current mode
+        // 3. final deferred rendering, depending on current mode
 		
         switch (renderMode) {
             case SHOW_FINAL_VIEW:
@@ -222,7 +223,7 @@ public:
 				
             case SHOW_DIFFUSE_VIEW:
                 gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize());
+                gl::setMatricesWindow(getWindowSize(), false);
                 mDeferredFBO.getTexture(0).bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
                 mDeferredFBO.getTexture(0).unbind(0);
@@ -230,7 +231,7 @@ public:
 				
             case SHOW_DEPTH_VIEW:
                 gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize());
+                gl::setMatricesWindow(getWindowSize(), false);
                 mDeferredFBO.getTexture(1).bind(0);
                 mAlphaToRBGShader.bind();
                 mAlphaToRBGShader.uniform("tex", 0);
@@ -241,7 +242,7 @@ public:
 				
             case SHOW_POSITION_VIEW:
                 gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize());
+                gl::setMatricesWindow(getWindowSize(), false);
                 mDeferredFBO.getTexture(2).bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
                 mDeferredFBO.getTexture(2).unbind(0);
@@ -249,7 +250,7 @@ public:
 				
             case SHOW_ATTRIBUTE_VIEW:
                 gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize());
+                gl::setMatricesWindow(getWindowSize(), false);
                 mDeferredFBO.getTexture(3).bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
                 mDeferredFBO.getTexture(3).unbind(0);
@@ -257,7 +258,7 @@ public:
                 
             case SHOW_NORMALMAP_VIEW:
                 gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize());
+                gl::setMatricesWindow(getWindowSize(), false);
                 mDeferredFBO.getTexture(1).bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
                 mDeferredFBO.getTexture(1).unbind(0);
@@ -265,7 +266,7 @@ public:
 				
             case SHOW_SSAO_VIEW:
                 gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize());
+                gl::setMatricesWindow(getWindowSize(), false);
                 mSSAOFBO.getTexture().bind(0);
                 mBlenderShader.bind();
                 mBlenderShader.uniform("ssaoTex", 0);
@@ -279,7 +280,7 @@ public:
             case SHOW_SSAO_BLURRED_VIEW:
                 pingPongBlurSSAO();
                 gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize());
+                gl::setMatricesWindow(getWindowSize(), false);
                 mVBlurFBO.getTexture().bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
                 mVBlurFBO.getTexture().unbind(0);
@@ -287,7 +288,7 @@ public:
 				
             case SHOW_LIGHT_VIEW:
                 gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize());
+                gl::setMatricesWindow(getWindowSize(), false);
                 mLightFBO.getTexture().bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
                 mLightFBO.getTexture().unbind(0);
@@ -295,7 +296,7 @@ public:
 				
             case SHOW_SHADOWS_VIEW:
                 gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize());
+                gl::setMatricesWindow(getWindowSize(), false);
                 mShadowFBO.getTexture().bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
                 mShadowFBO.getTexture().unbind(0);
@@ -321,8 +322,9 @@ private:
 		glClearDepth(1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		// render deferred light geometry
 		mDeferredShader.bind();
+
+		// render deferred light geometry
 		mDeferredShader.uniform("diff_coeff", 0.15f);
 		mDeferredShader.uniform("phong_coeff", 0.3f);
 		mDeferredShader.uniform("two_sided", 0.8f);
@@ -330,16 +332,11 @@ private:
 		renderLightGeometry();
 		
 		// render deferred geometry
-		//mDeferredShader.bind();
 		mDeferredShader.uniform("diff_coeff", 1.0f);
 		mDeferredShader.uniform("phong_coeff", 0.0f);
 		mDeferredShader.uniform("two_sided", 0.8f);
-		
-		if (mRenderShadowCastersFunc)
-			mRenderShadowCastersFunc(&mDeferredShader);
-		
-		if (mRenderNonShadowCastersFunc)
-			mRenderNonShadowCastersFunc(&mDeferredShader);
+		if (mRenderShadowCastersFunc) mRenderShadowCastersFunc(&mDeferredShader);
+		if (mRenderNonShadowCastersFunc) mRenderNonShadowCastersFunc(&mDeferredShader);
 		
 		mDeferredShader.unbind();
 		mDeferredFBO.unbindFramebuffer();

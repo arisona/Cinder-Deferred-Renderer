@@ -5,38 +5,38 @@ using namespace ci;
 class PointLight {
 	const float LIGHT_CUTOFF_DEFAULT = 0.001f;
 
-public:
-    CameraPersp     mShadowCam;
-    CubeShadowMap   mShadowMap;
-    gl::Fbo			mCubeDepthFbo;
-    gl::Fbo			mShadowFBO;
-    
 private:
-    Vec3f           mPosition;
-    Color           mColor;
-    bool            mCastShadows;
-    bool            mVisible;
-    int             mShadowMapRes;
-    float           mAOEDist; // AOE = area of effect
+    Vec3f mPosition;
+    Color mColor;
+    float mAOEDist; // AOE = area of effect
+    int mShadowMapRes;
+    bool mCastShadows;
+    bool mVisible;
     
 public:
-	PointLight(Vec3f position, Color color, int shadowMapRes, bool castsShadows = false, bool visible = true) {
+    CameraPersp mShadowCam;
+    CubeShadowMap mShadowMap;
+    gl::Fbo mCubeDepthFbo;
+    gl::Fbo mShadowFBO;
+    
+public:
+	PointLight(Vec3f position, Color color, int shadowMapRes, bool castShadows = false, bool visible = true) {
         mPosition = position;
         mColor = color;
         mAOEDist = sqrt(color.length() / LIGHT_CUTOFF_DEFAULT);
         mShadowMapRes = shadowMapRes;
+        mCastShadows = castShadows;
+        mVisible = visible;
         
         //set up fake "light" to grab matrix calculations from
         mShadowCam.setPerspective(90.0f, 1.0f, 1.0f, 100.0f);
         mShadowCam.lookAt(position, Vec3f(position.x, 0, position.z));
         
-        mCastShadows = castsShadows;
-        mVisible = visible;
         if (mCastShadows) {
-			//set up cube map for point shadows
+			// set up cube map for point shadows
 			mShadowMap.setup(mShadowMapRes);
 			
-			//create FBO to hold depth values from cube map
+			// create FBO to hold depth values from cube map
 			gl::Fbo::Format formatShadow;
 			formatShadow.enableColorBuffer(true, 1);
 			formatShadow.enableDepthBuffer(true, true);
@@ -46,9 +46,9 @@ public:
 			mCubeDepthFbo = gl::Fbo(mShadowMapRes, mShadowMapRes, formatShadow);
 			
 			gl::Fbo::Format format;
-			//format.setDepthInternalFormat(GL_DEPTH_COMPONENT32);
+			// format.setDepthInternalFormat(GL_DEPTH_COMPONENT32);
 			format.setColorInternalFormat(GL_RGBA16F_ARB);
-			//format.setSamples(4); // enable 4x antialiasing
+			// format.setSamples(4); // enable 4x antialiasing
 			mShadowFBO	= gl::Fbo(mShadowMapRes, mShadowMapRes, format);
 		}
     }
