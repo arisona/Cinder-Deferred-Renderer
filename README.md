@@ -1,3 +1,16 @@
+Cinder application for deferred rendering experiments (lighing, shadows mapping, SSAO)
+
+Forked from original code by 
+Anthony Scavarelli <anthony.scavarelli@gmail.com> 
+at
+http://github.com/xxx
+
+Thanks to Anthony and the contributors his code is based on.
+
+
+====== original comments, to be adjusted ======
+
+
 What is this?
 A Cinder application that utilizes a deferred rendering engine to render lights and SSAO. There is also point-light shadow-mapping (heavy GPU cost though)
 
