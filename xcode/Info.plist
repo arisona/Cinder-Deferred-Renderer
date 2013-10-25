@@ -6,6 +6,8 @@
 	<string>English</string>
 	<key>CFBundleExecutable</key>
 	<string>${EXECUTABLE_NAME}</string>
+	<key>CFBundleIconFile</key>
+	<string>CinderApp</string>
 	<key>CFBundleIdentifier</key>
 	<string>ch.arisona.CinderDeferredRenderer</string>
 	<key>CFBundleInfoDictionaryVersion</key>
