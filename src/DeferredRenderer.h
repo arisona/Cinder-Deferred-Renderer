@@ -136,14 +136,20 @@ public:
 		mAlphaToRBGShader	= gl::GlslProg(ssuvVert, loadResource(SHADER_ALPHA_RGB_FRAG));
 		
 		// init FBOs
-		//this FBO will capture normals, depth, and base diffuse in one render pass (as opposed to three)
+		
+		// special fbo format for deferred buffer
+		// 4 color attachments:
+		// - diffuse (rgba), normal + depth (rgb + a)
+		// - position (rgb + a ignored)
+		// - diff_coeff + phong_coeff + two_sides (rgb + a ignored)
 		gl::Fbo::Format mtRFBO;
 		mtRFBO.enableDepthBuffer();
-		mtRFBO.setDepthInternalFormat(GL_DEPTH_COMPONENT32); //want fbo to have precision depth map as well
+		mtRFBO.setDepthInternalFormat(GL_DEPTH_COMPONENT32);
 		mtRFBO.setColorInternalFormat(GL_RGBA16F_ARB);
-		mtRFBO.enableColorBuffer(true, 4); // create an FBO with four color attachments (basic diffuse, normal/depth view, attribute view, and position view)
-		//mtRFBO.setSamples(4); // uncomment this to enable 4x antialiasing
+		mtRFBO.enableColorBuffer(true, 4);
+		//mtRFBO.setSamples(4); // enable 4x antialiasing
 		
+		// standard fbo format for all others
 		gl::Fbo::Format format;
 		//format.setDepthInternalFormat(GL_DEPTH_COMPONENT32);
 		//format.setColorInternalFormat(GL_RGBA16F_ARB);
@@ -186,33 +192,35 @@ public:
         // 3. final deferred rendering, depending on current mode
 		
         switch (renderMode) {
-            case SHOW_FINAL_VIEW:
+            case SHOW_FINAL_VIEW: // key 0
                 pingPongBlurSSAO();
 				
 				mFinalFBO.bindFramebuffer();
 				glClearColor(0.5f, 0.5f, 0.5f, 1);
 				glClearDepth(1.0f);
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                gl::setMatricesWindow((float)mFinalFBO.getWidth(), (float)mFinalFBO.getHeight());
-                gl::setViewport(mFinalFBO.getBounds());
-                mVBlurFBO.getTexture().bind(0);
-                mShadowFBO.getTexture().bind(1);
-                mLightFBO.getTexture().bind(2);
-                mBlenderShader.bind();
-                mBlenderShader.uniform("ssaoTex", 0);
-                mBlenderShader.uniform("shadowsTex", 1);
-                mBlenderShader.uniform("baseTex", 2);
-                gl::drawSolidRect(Rectf(0, 0, mFinalFBO.getWidth(), mFinalFBO.getHeight()));
-                mBlenderShader.unbind();
-                mLightFBO.getTexture().unbind(2);
-                mShadowFBO.getTexture().unbind(1);
-                mVBlurFBO.getTexture().unbind(0);
-                
+				
+				gl::setMatricesWindow((float)mFinalFBO.getWidth(), (float)mFinalFBO.getHeight());
+				gl::setViewport(mFinalFBO.getBounds());
+				
+				mVBlurFBO.getTexture().bind(0);
+				mShadowFBO.getTexture().bind(1);
+				mLightFBO.getTexture().bind(2);
+				mBlenderShader.bind();
+				mBlenderShader.uniform("ssaoTex", 0);
+				mBlenderShader.uniform("shadowsTex", 1);
+				mBlenderShader.uniform("baseTex", 2);
+				gl::drawSolidRect(Rectf(0, 0, mFinalFBO.getWidth(), mFinalFBO.getHeight()));
+				mBlenderShader.unbind();
+				mShadowFBO.getTexture().unbind(1);
+				mLightFBO.getTexture().unbind(2);
+				mVBlurFBO.getTexture().unbind(0);
 				mFinalFBO.unbindFramebuffer();
-                
-				mFinalFBO.getTexture().bind(0);
+
                 gl::setViewport(getWindowBounds());
                 gl::setMatricesWindow(getWindowSize());
+				
+				mFinalFBO.getTexture().bind(0);
 				mFXAAShader.bind();
 				mFXAAShader.uniform("tex", 0);
 				mFXAAShader.uniform("frameBufSize", Vec2f(mFinalFBO.getWidth(), mFinalFBO.getHeight()));
@@ -221,7 +229,7 @@ public:
 				mFinalFBO.getTexture().unbind(0);
                 break;
 				
-            case SHOW_DIFFUSE_VIEW:
+            case SHOW_DIFFUSE_VIEW: // key 1
                 gl::setViewport(getWindowBounds());
                 gl::setMatricesWindow(getWindowSize(), false);
                 mDeferredFBO.getTexture(0).bind(0);
@@ -229,7 +237,15 @@ public:
                 mDeferredFBO.getTexture(0).unbind(0);
                 break;
 				
-            case SHOW_DEPTH_VIEW:
+            case SHOW_NORMALMAP_VIEW: // key 2
+                gl::setViewport(getWindowBounds());
+                gl::setMatricesWindow(getWindowSize(), false);
+                mDeferredFBO.getTexture(1).bind(0);
+				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
+                mDeferredFBO.getTexture(1).unbind(0);
+                break;
+				
+            case SHOW_DEPTH_VIEW: // key 3
                 gl::setViewport(getWindowBounds());
                 gl::setMatricesWindow(getWindowSize(), false);
                 mDeferredFBO.getTexture(1).bind(0);
@@ -240,7 +256,7 @@ public:
                 mDeferredFBO.getTexture(1).unbind(0);
                 break;
 				
-            case SHOW_POSITION_VIEW:
+            case SHOW_POSITION_VIEW: // key 4
                 gl::setViewport(getWindowBounds());
                 gl::setMatricesWindow(getWindowSize(), false);
                 mDeferredFBO.getTexture(2).bind(0);
@@ -248,7 +264,7 @@ public:
                 mDeferredFBO.getTexture(2).unbind(0);
                 break;
 				
-            case SHOW_ATTRIBUTE_VIEW:
+            case SHOW_ATTRIBUTE_VIEW: // key 5
                 gl::setViewport(getWindowBounds());
                 gl::setMatricesWindow(getWindowSize(), false);
                 mDeferredFBO.getTexture(3).bind(0);
@@ -256,28 +272,15 @@ public:
                 mDeferredFBO.getTexture(3).unbind(0);
                 break;
                 
-            case SHOW_NORMALMAP_VIEW:
-                gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize(), false);
-                mDeferredFBO.getTexture(1).bind(0);
-				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
-                mDeferredFBO.getTexture(1).unbind(0);
-                break;
-				
-            case SHOW_SSAO_VIEW:
+            case SHOW_SSAO_VIEW: // key 6
                 gl::setViewport(getWindowBounds());
                 gl::setMatricesWindow(getWindowSize(), false);
                 mSSAOFBO.getTexture().bind(0);
-                mBlenderShader.bind();
-                mBlenderShader.uniform("ssaoTex", 0);
-                mBlenderShader.uniform("shadowsTex", 0);
-                mBlenderShader.uniform("baseTex", 0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
-                mBlenderShader.unbind();
                 mSSAOFBO.getTexture().unbind(0);
                 break;
 				
-            case SHOW_SSAO_BLURRED_VIEW:
+            case SHOW_SSAO_BLURRED_VIEW: // key 7
                 pingPongBlurSSAO();
                 gl::setViewport(getWindowBounds());
                 gl::setMatricesWindow(getWindowSize(), false);
@@ -286,7 +289,7 @@ public:
                 mVBlurFBO.getTexture().unbind(0);
                 break;
 				
-            case SHOW_LIGHT_VIEW:
+            case SHOW_LIGHT_VIEW: // key 8
                 gl::setViewport(getWindowBounds());
                 gl::setMatricesWindow(getWindowSize(), false);
                 mLightFBO.getTexture().bind(0);
@@ -294,7 +297,7 @@ public:
                 mLightFBO.getTexture().unbind(0);
                 break;
 				
-            case SHOW_SHADOWS_VIEW:
+            case SHOW_SHADOWS_VIEW: // key 9
                 gl::setViewport(getWindowBounds());
                 gl::setMatricesWindow(getWindowSize(), false);
                 mShadowFBO.getTexture().bind(0);
@@ -332,6 +335,9 @@ private:
 		renderLightGeometry();
 		
 		// render deferred geometry
+		//mDeferredShader.uniform("diff_coeff", 0.4f);
+		//mDeferredShader.uniform("phong_coeff", 0.3f);
+		//mDeferredShader.uniform("two_sided", 0.8f);
 		mDeferredShader.uniform("diff_coeff", 1.0f);
 		mDeferredShader.uniform("phong_coeff", 0.0f);
 		mDeferredShader.uniform("two_sided", 0.8f);
@@ -522,13 +528,13 @@ private:
         glDepthMask(false);
         
         mLightShader.bind(); //bind point light pixel shader
-        mDeferredFBO.getTexture(2).bind(0); //bind position, normal and color textures from deferred shading pass
+        mDeferredFBO.getTexture(2).bind(0); // bind position, normal and color textures from deferred shading pass
         mLightShader.uniform("positionMap", 0);
-        mDeferredFBO.getTexture(1).bind(1); //bind normal tex
+        mDeferredFBO.getTexture(1).bind(1); // bind normal tex
         mLightShader.uniform("normalMap", 1);
-        mDeferredFBO.getTexture(0).bind(2); //bind color tex
+        mDeferredFBO.getTexture(0).bind(2); // bind color tex
         mLightShader.uniform("colorMap", 2);
-        mDeferredFBO.getTexture(3).bind(3); //bind attr tex
+        mDeferredFBO.getTexture(3).bind(3); // bind attr tex
         mLightShader.uniform("attrMap", 3);
         mLightShader.uniform("camPosition", mCamera->getCamera().getEyePoint());
         

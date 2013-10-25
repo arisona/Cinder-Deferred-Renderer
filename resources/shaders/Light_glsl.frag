@@ -1,8 +1,13 @@
 #version 120
 
 //input parameters
-uniform sampler2D positionMap, normalMap, colorMap, attrMap;
-uniform vec3 camPos, lightPos, lightCol;
+uniform sampler2D positionMap;
+uniform sampler2D normalMap;
+uniform sampler2D colorMap;
+uniform sampler2D attrMap;
+uniform vec3 camPos;
+uniform vec3 lightPos;
+uniform vec3 lightCol;
 uniform float dist;
 
 varying vec4 pos;

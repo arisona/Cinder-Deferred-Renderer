@@ -22,7 +22,6 @@ void main(void) {
     vec4 vertColor = gl_Color * (1.0 - useTexture);
     
 	gl_FragData[0] = texColor + vertColor;
-    // gl_FragData[0] = gl_Color;
 	gl_FragData[1] = vec4(normal, vDepth);
     gl_FragData[2] = vec4(vPos, 1.0);
 	gl_FragData[3] = vec4(diff_coeff, phong_coeff, two_sided, 1.0);

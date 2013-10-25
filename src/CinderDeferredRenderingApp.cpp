@@ -284,7 +284,7 @@ void CinderDeferredRenderingApp::drawShadowCasters(gl::GlslProg* shader) const {
 	// render some test objects
     if (shader != nullptr) {
         shader->uniform("useTexture", 1.0f);
-        shader->uniform("tex0", 0);
+        shader->uniform("tex", 0);
         mTexture.bind(0);
     }
     

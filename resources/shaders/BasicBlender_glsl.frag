@@ -9,17 +9,15 @@ uniform sampler2D baseTex;
 varying vec2 uv;
 
 void main() {
-	vec4 ssaoTex = texture2D(ssaoTex, uv);
-    vec4 shadowsTex	= texture2D(shadowsTex, uv);
-	vec4 baseTex = texture2D(baseTex, uv);
+	vec4 ssao = texture2D(ssaoTex, uv);
+    vec4 shadow	= texture2D(shadowsTex, uv);
+	vec4 base = texture2D(baseTex, uv);
     
-    // blendng by red value (from ssao)
-	float redVal = 1.0 - ssaoTex.r;
-	vec4 resultTex = vec4(baseTex.r - redVal, baseTex.g - redVal, baseTex.b - redVal, baseTex.a - redVal);
-    
-    // blending by alpha (from shadows)
-    float redVal2 = shadowsTex.a;
-	vec4 resultTex2	= vec4(resultTex.r - redVal2, resultTex.g - redVal2, resultTex.b - redVal2, resultTex.a - redVal2);
-	
-	gl_FragColor = resultTex2;
+    // blending by red value (from ssao)
+	float red = 1.0 - ssao.r;
+  
+	// blending by alpha (from shadows)
+    float alpha = shadow.a;
+
+	gl_FragColor = vec4(base.r - red - alpha, base.g - red - alpha, base.b - red - alpha, base.a - red - alpha);
 }
