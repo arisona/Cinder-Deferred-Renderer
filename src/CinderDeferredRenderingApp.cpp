@@ -96,6 +96,9 @@ private:
     float mFramerate = 0;
 	
     DeferredRenderer::RenderMode mRenderMode = DeferredRenderer::SHOW_FINAL_VIEW;
+	bool mShadows = true;
+	bool mSSAO = true;
+	
     DeferredRenderer mRenderer;
 
     MayaCamUI mCamera;
@@ -184,7 +187,7 @@ void CinderDeferredRenderingApp::update() {
 }
 
 void CinderDeferredRenderingApp::draw() {
-    mRenderer.render(mRenderMode, true, true);
+    mRenderer.render(mRenderMode, mShadows, mSSAO);
 	if (mShowParams)
 		mParams.draw();
 }
@@ -206,6 +209,12 @@ void CinderDeferredRenderingApp::keyDown(KeyEvent event) {
     float lightMoveInc = 0.1f;
 
 	switch (event.getCode()) {
+		case KeyEvent::KEY_a:
+			mSSAO = !mSSAO;
+			break;
+		case KeyEvent::KEY_s:
+			mShadows = !mShadows;
+			break;
 		case KeyEvent::KEY_0:
 			mRenderMode = DeferredRenderer::SHOW_FINAL_VIEW;
 			break;
@@ -236,20 +245,20 @@ void CinderDeferredRenderingApp::keyDown(KeyEvent event) {
         case KeyEvent::KEY_9:
 			mRenderMode = DeferredRenderer::SHOW_SHADOWS_VIEW;
 			break;
-            
-			//change which cube you want to control
-        case 269: // minus key
+
+		// change which light you want to control
+        case KeyEvent::KEY_COMMA:
                 mCurrentLightIndex--;
                 if (mCurrentLightIndex < 0)
 					mCurrentLightIndex = mRenderer.getLights().size() - 1;
             break;
-        case 61: // plus key
+        case KeyEvent::KEY_PERIOD:
 			mCurrentLightIndex++;
 			if (mCurrentLightIndex > mRenderer.getLights().size() - 1)
 				mCurrentLightIndex = 0;
             break;
 			
-			//move selected cube light
+		// move selected light
 		case KeyEvent::KEY_UP:
 			if (event.isShiftDown()) {
 				mRenderer.getLights().at(mCurrentLightIndex)->setPosition(mRenderer.getLights().at(mCurrentLightIndex)->getPosition() + Vec3f(0, lightMoveInc, 0));

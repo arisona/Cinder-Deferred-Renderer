@@ -139,12 +139,14 @@ public:
 		
 		// special fbo format for deferred buffer
 		// 4 color attachments:
-		// - diffuse (rgba), normal + depth (rgb + a)
+		// - diffuse (rgba)
+		// - normal + depth (rgb + a)
 		// - position (rgb + a ignored)
 		// - diff_coeff + phong_coeff + two_sides (rgb + a ignored)
+		// XXX: currently, the depth buffer isn't used (depth stored in color attachment)
 		gl::Fbo::Format mtRFBO;
-		mtRFBO.enableDepthBuffer();
-		mtRFBO.setDepthInternalFormat(GL_DEPTH_COMPONENT32);
+		//mtRFBO.enableDepthBuffer();
+		//mtRFBO.setDepthInternalFormat(GL_DEPTH_COMPONENT32);
 		mtRFBO.setColorInternalFormat(GL_RGBA16F_ARB);
 		mtRFBO.enableColorBuffer(true, 4);
 		//mtRFBO.setSamples(4); // enable 4x antialiasing
@@ -176,20 +178,22 @@ public:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         gl::setMatrices(mCamera->getCamera());
-        
         renderSceneToDeferredFBO();
         
 		// 2. create shadow maps, and render shadows to FBOs
 		
-        createShadowMaps();
-        renderShadowsToFBOs();
+		if (enableShadows) {
+			createShadowMaps();
+			renderShadowsToFBOs();
+		}
         
+		// 3. render lights & ssao to FBO
+		
         gl::setMatrices(mCamera->getCamera());
-        
         renderLightsToFBO();
         renderSSAOToFBO();
 		
-        // 3. final deferred rendering, depending on current mode
+        // 4. final deferred rendering, depending on current mode
 		
         switch (renderMode) {
             case SHOW_FINAL_VIEW: // key 0
@@ -203,18 +207,20 @@ public:
 				gl::setMatricesWindow((float)mFinalFBO.getWidth(), (float)mFinalFBO.getHeight());
 				gl::setViewport(mFinalFBO.getBounds());
 				
-				mVBlurFBO.getTexture().bind(0);
-				mShadowFBO.getTexture().bind(1);
+				if (enableSSAO) mVBlurFBO.getTexture().bind(0);
+				if (enableShadows) mShadowFBO.getTexture().bind(1);
 				mLightFBO.getTexture().bind(2);
 				mBlenderShader.bind();
-				mBlenderShader.uniform("ssaoTex", 0);
-				mBlenderShader.uniform("shadowsTex", 1);
-				mBlenderShader.uniform("baseTex", 2);
+				mBlenderShader.uniform("texSSAO", 0);
+				mBlenderShader.uniform("texShadows", 1);
+				mBlenderShader.uniform("tex", 2);
+				mBlenderShader.uniform("ssao", enableSSAO);
+				mBlenderShader.uniform("shadows", enableShadows);
 				gl::drawSolidRect(Rectf(0, 0, mFinalFBO.getWidth(), mFinalFBO.getHeight()));
 				mBlenderShader.unbind();
-				mShadowFBO.getTexture().unbind(1);
+				if (enableSSAO) mVBlurFBO.getTexture().unbind(0);
+				if (enableShadows) mShadowFBO.getTexture().unbind(1);
 				mLightFBO.getTexture().unbind(2);
-				mVBlurFBO.getTexture().unbind(0);
 				mFinalFBO.unbindFramebuffer();
 
                 gl::setViewport(getWindowBounds());
@@ -521,10 +527,10 @@ private:
     
     void renderLights() {
         glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE); //set blend function
-        glEnable(GL_CULL_FACE); //cull front faces
+        glBlendFunc(GL_ONE, GL_ONE);
+        glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);
-        glDisable(GL_DEPTH_TEST); //disable depth testing
+        glDisable(GL_DEPTH_TEST);
         glDepthMask(false);
         
         mLightShader.bind(); //bind point light pixel shader
@@ -538,7 +544,7 @@ private:
         mLightShader.uniform("attrMap", 3);
         mLightShader.uniform("camPosition", mCamera->getCamera().getEyePoint());
         
-		// render  proxy shapes
+		// render proxy shapes
         for (PointLight* light : mLights) {
 			float distance = light->getAOEDistance();
 			mLightShader.uniform("lightPos", mCamera->getCamera().getModelViewMatrix().transformPointAffine(light->getPosition()));

@@ -2,22 +2,23 @@
 
 // just blending 3 textures together (in a weird way)
 
-uniform sampler2D ssaoTex;
-uniform sampler2D shadowsTex;
-uniform sampler2D baseTex;
+
+uniform sampler2D texSSAO;
+uniform sampler2D texShadows;
+uniform sampler2D tex;
+
+uniform bool ssao;
+uniform bool shadows;
 
 varying vec2 uv;
 
 void main() {
-	vec4 ssao = texture2D(ssaoTex, uv);
-    vec4 shadow	= texture2D(shadowsTex, uv);
-	vec4 base = texture2D(baseTex, uv);
-    
     // blending by red value (from ssao)
-	float red = 1.0 - ssao.r;
+	float red = ssao ? 1.0 - texture2D(texSSAO, uv).r : 0;
   
 	// blending by alpha (from shadows)
-    float alpha = shadow.a;
+    float alpha = shadows ? texture2D(texShadows, uv).a : 0;
 
-	gl_FragColor = vec4(base.r - red - alpha, base.g - red - alpha, base.b - red - alpha, base.a - red - alpha);
+	vec4 color = texture2D(tex, uv);
+	gl_FragColor = vec4(color.r - red - alpha, color.g - red - alpha, color.b - red - alpha, color.a - red - alpha);
 }
