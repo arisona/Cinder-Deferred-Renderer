@@ -1,6 +1,5 @@
 #version 120
-//original SSAO shader graciously written at: http://www.gamerendering.com/2009/01/14/ssao/
-//modified to work with glsl 120
+// http://www.gamerendering.com/2009/01/14/ssao/
 
 uniform sampler2D rnm;
 uniform sampler2D normalMap;

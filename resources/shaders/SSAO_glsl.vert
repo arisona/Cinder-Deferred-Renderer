@@ -1,5 +1,5 @@
 #version 120
-//http://www.gamerendering.com/2009/01/14/ssao/
+// http://www.gamerendering.com/2009/01/14/ssao/
 
 varying vec2  uv;
  

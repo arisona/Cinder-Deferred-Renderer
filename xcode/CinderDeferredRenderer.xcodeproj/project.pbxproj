@@ -16,7 +16,25 @@
 		00BAE65A0E7ED9C10018A608 /* CinderDeferredRenderingApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00BAE6590E7ED9C10018A608 /* CinderDeferredRenderingApp.cpp */; };
 		00CCAF15116A9FEE008396D5 /* CinderApp.icns in Resources */ = {isa = PBXBuildFile; fileRef = 00CCAF14116A9FEE008396D5 /* CinderApp.icns */; };
 		0C76FBCD181A06740011F61C /* random.png in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBB9181A06740011F61C /* random.png */; };
-		0CAEB34A1819FB61008CCF3B /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 0CAEB3491819FB61008CCF3B /* README.md */; };
+		0CC41459181A09DD00B200FC /* AlphaToRGB_glsl.frag in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBA5181A06740011F61C /* AlphaToRGB_glsl.frag */; };
+		0CC4145A181A09DD00B200FC /* AlphaToRGB_glsl.vert in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBA6181A06740011F61C /* AlphaToRGB_glsl.vert */; };
+		0CC4145B181A09DD00B200FC /* BasicBlender_glsl.frag in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBA7181A06740011F61C /* BasicBlender_glsl.frag */; };
+		0CC4145C181A09DD00B200FC /* BasicBlender_glsl.vert in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBA8181A06740011F61C /* BasicBlender_glsl.vert */; };
+		0CC4145D181A09DD00B200FC /* Blur_h_glsl.frag in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBA9181A06740011F61C /* Blur_h_glsl.frag */; };
+		0CC4145E181A09DD00B200FC /* Blur_h_glsl.vert in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBAA181A06740011F61C /* Blur_h_glsl.vert */; };
+		0CC4145F181A09DD00B200FC /* Blur_v_glsl.frag in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBAB181A06740011F61C /* Blur_v_glsl.frag */; };
+		0CC41460181A09DD00B200FC /* Blur_v_glsl.vert in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBAC181A06740011F61C /* Blur_v_glsl.vert */; };
+		0CC41461181A09DD00B200FC /* CubeShadowMap_glsl.frag in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBAD181A06740011F61C /* CubeShadowMap_glsl.frag */; };
+		0CC41462181A09DD00B200FC /* CubeShadowMap_glsl.vert in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBAE181A06740011F61C /* CubeShadowMap_glsl.vert */; };
+		0CC41463181A09DD00B200FC /* Deferred_glsl.frag in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBAF181A06740011F61C /* Deferred_glsl.frag */; };
+		0CC41464181A09DD00B200FC /* Deferred_glsl.vert in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBB0181A06740011F61C /* Deferred_glsl.vert */; };
+		0CC41465181A09DD00B200FC /* FXAA_glsl.frag in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBB1181A06740011F61C /* FXAA_glsl.frag */; };
+		0CC41466181A09DD00B200FC /* FXAA_glsl.vert in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBB2181A06740011F61C /* FXAA_glsl.vert */; };
+		0CC41467181A09DD00B200FC /* Light_glsl.frag in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBB3181A06740011F61C /* Light_glsl.frag */; };
+		0CC41468181A09DD00B200FC /* Light_glsl.vert in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBB4181A06740011F61C /* Light_glsl.vert */; };
+		0CC41469181A09DD00B200FC /* SSAO_unused_glsl.frag in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBB5181A06740011F61C /* SSAO_unused_glsl.frag */; };
+		0CC4146A181A09DD00B200FC /* SSAO_glsl.vert in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBB6181A06740011F61C /* SSAO_glsl.vert */; };
+		0CC4146B181A09DD00B200FC /* SSAO_glsl.frag in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBB7181A06740011F61C /* SSAO_glsl.frag */; };
 		5323E6B20EAFCA74003A9687 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B10EAFCA74003A9687 /* CoreVideo.framework */; };
 		5323E6B60EAFCA7E003A9687 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B50EAFCA7E003A9687 /* QTKit.framework */; };
 		53E3CDFC0E86099300238D2B /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 53E3CDFB0E86099300238D2B /* Carbon.framework */; };
@@ -271,7 +289,25 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0CAEB34A1819FB61008CCF3B /* README.md in Resources */,
+				0CC41459181A09DD00B200FC /* AlphaToRGB_glsl.frag in Resources */,
+				0CC4145A181A09DD00B200FC /* AlphaToRGB_glsl.vert in Resources */,
+				0CC4145B181A09DD00B200FC /* BasicBlender_glsl.frag in Resources */,
+				0CC4145C181A09DD00B200FC /* BasicBlender_glsl.vert in Resources */,
+				0CC4145D181A09DD00B200FC /* Blur_h_glsl.frag in Resources */,
+				0CC4145E181A09DD00B200FC /* Blur_h_glsl.vert in Resources */,
+				0CC4145F181A09DD00B200FC /* Blur_v_glsl.frag in Resources */,
+				0CC41460181A09DD00B200FC /* Blur_v_glsl.vert in Resources */,
+				0CC41461181A09DD00B200FC /* CubeShadowMap_glsl.frag in Resources */,
+				0CC41462181A09DD00B200FC /* CubeShadowMap_glsl.vert in Resources */,
+				0CC41463181A09DD00B200FC /* Deferred_glsl.frag in Resources */,
+				0CC41464181A09DD00B200FC /* Deferred_glsl.vert in Resources */,
+				0CC41465181A09DD00B200FC /* FXAA_glsl.frag in Resources */,
+				0CC41466181A09DD00B200FC /* FXAA_glsl.vert in Resources */,
+				0CC41467181A09DD00B200FC /* Light_glsl.frag in Resources */,
+				0CC41468181A09DD00B200FC /* Light_glsl.vert in Resources */,
+				0CC41469181A09DD00B200FC /* SSAO_unused_glsl.frag in Resources */,
+				0CC4146A181A09DD00B200FC /* SSAO_glsl.vert in Resources */,
+				0CC4146B181A09DD00B200FC /* SSAO_glsl.frag in Resources */,
 				00CCAF15116A9FEE008396D5 /* CinderApp.icns in Resources */,
 				0C76FBCD181A06740011F61C /* random.png in Resources */,
 				DF29E54716FE998200F37AC9 /* Earth_from_NASA.jpg in Resources */,
