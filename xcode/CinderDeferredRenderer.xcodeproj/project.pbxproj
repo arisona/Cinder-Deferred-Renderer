@@ -35,6 +35,7 @@
 		0CC41469181A09DD00B200FC /* SSAO_unused_glsl.frag in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBB5181A06740011F61C /* SSAO_unused_glsl.frag */; };
 		0CC4146A181A09DD00B200FC /* SSAO_glsl.vert in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBB6181A06740011F61C /* SSAO_glsl.vert */; };
 		0CC4146B181A09DD00B200FC /* SSAO_glsl.frag in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBB7181A06740011F61C /* SSAO_glsl.frag */; };
+		0CD444DA181A3F9500BC2026 /* ScreenSpaceUV.vert in Resources */ = {isa = PBXBuildFile; fileRef = 0CD444D9181A3F9500BC2026 /* ScreenSpaceUV.vert */; };
 		5323E6B20EAFCA74003A9687 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B10EAFCA74003A9687 /* CoreVideo.framework */; };
 		5323E6B60EAFCA7E003A9687 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B50EAFCA7E003A9687 /* QTKit.framework */; };
 		53E3CDFC0E86099300238D2B /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 53E3CDFB0E86099300238D2B /* Carbon.framework */; };
@@ -72,7 +73,8 @@
 		0C76FBB7181A06740011F61C /* SSAO_glsl.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = SSAO_glsl.frag; sourceTree = "<group>"; };
 		0C76FBB9181A06740011F61C /* random.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = random.png; sourceTree = "<group>"; };
 		0CAEB3491819FB61008CCF3B /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = README.md; path = ../README.md; sourceTree = "<group>"; };
-		0CC4146C181A0AA700B200FC /* PointLight.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PointLight.h; sourceTree = "<group>"; };
+		0CC4146C181A0AA700B200FC /* PointLight.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; path = PointLight.h; sourceTree = "<group>"; };
+		0CD444D9181A3F9500BC2026 /* ScreenSpaceUV.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = ScreenSpaceUV.vert; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
@@ -84,8 +86,8 @@
 		8D1107320486CEB800E47090 /* CinderDeferredRenderer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CinderDeferredRenderer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DF29E54616FE998200F37AC9 /* Earth_from_NASA.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = Earth_from_NASA.jpg; path = ../resources/Earth_from_NASA.jpg; sourceTree = "<group>"; };
 		DF5878A6168109F000193DC6 /* Resources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Resources.h; path = ../include/Resources.h; sourceTree = "<group>"; };
-		DF970BB31683E35F0076C154 /* CubeShadowMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CubeShadowMap.h; path = ../src/CubeShadowMap.h; sourceTree = "<group>"; };
-		DFD06661169255550086C6D6 /* DeferredRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DeferredRenderer.h; path = ../src/DeferredRenderer.h; sourceTree = "<group>"; };
+		DF970BB31683E35F0076C154 /* CubeShadowMap.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = CubeShadowMap.h; path = ../src/CubeShadowMap.h; sourceTree = "<group>"; };
+		DFD06661169255550086C6D6 /* DeferredRenderer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = DeferredRenderer.h; path = ../src/DeferredRenderer.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -112,7 +114,6 @@
 		080E96DDFE201D6D7F000001 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				DF9F3BFD16A7C0D200954C99 /* DeferredRenderer */,
 				00BAE6590E7ED9C10018A608 /* CinderDeferredRenderingApp.cpp */,
 			);
 			name = Source;
@@ -140,6 +141,7 @@
 				0C76FBB5181A06740011F61C /* SSAO_unused_glsl.frag */,
 				0C76FBB6181A06740011F61C /* SSAO_glsl.vert */,
 				0C76FBB7181A06740011F61C /* SSAO_glsl.frag */,
+				0CD444D9181A3F9500BC2026 /* ScreenSpaceUV.vert */,
 			);
 			name = shaders;
 			path = ../resources/shaders;
@@ -206,6 +208,7 @@
 			isa = PBXGroup;
 			children = (
 				DF5878A6168109F000193DC6 /* Resources.h */,
+				DF9F3BFD16A7C0D200954C99 /* DeferredRenderer */,
 			);
 			name = Headers;
 			sourceTree = "<group>";
@@ -310,6 +313,7 @@
 				0CC41469181A09DD00B200FC /* SSAO_unused_glsl.frag in Resources */,
 				0CC4146A181A09DD00B200FC /* SSAO_glsl.vert in Resources */,
 				0CC4146B181A09DD00B200FC /* SSAO_glsl.frag in Resources */,
+				0CD444DA181A3F9500BC2026 /* ScreenSpaceUV.vert in Resources */,
 				00CCAF15116A9FEE008396D5 /* CinderApp.icns in Resources */,
 				0C76FBCD181A06740011F61C /* random.png in Resources */,
 				DF29E54716FE998200F37AC9 /* Earth_from_NASA.jpg in Resources */,
@@ -347,6 +351,7 @@
 					"-lcurl",
 				);
 				PRODUCT_NAME = CinderDeferredRenderer;
+				SCAN_ALL_SOURCE_FILES_FOR_INCLUDES = YES;
 				SYMROOT = ./build;
 				WRAPPER_EXTENSION = app;
 			};
@@ -369,6 +374,7 @@
 					"-lcurl",
 				);
 				PRODUCT_NAME = CinderDeferredRenderer;
+				SCAN_ALL_SOURCE_FILES_FOR_INCLUDES = YES;
 				STRIP_INSTALLED_PRODUCT = YES;
 				SYMROOT = ./build;
 				WRAPPER_EXTENSION = app;

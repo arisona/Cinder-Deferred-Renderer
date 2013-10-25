@@ -7,7 +7,6 @@
 //shaders
 #define SSAO_VERT                       CINDER_RESOURCE( ../resources/shaders/, SSAO_glsl.vert, 129, GLSL )
 #define SSAO_FRAG						CINDER_RESOURCE( ../resources/shaders/, SSAO_glsl.frag, 130, GLSL )
-//#define SSAO_FRAG                       CINDER_RESOURCE( ../resources/shaders/, SSAO_unused_glsl.frag, 130, GLSL )
 
 #define DEFER_VERT                      CINDER_RESOURCE( ../resources/shaders/, Deferred_glsl.vert, 131, GLSL )
 #define DEFER_FRAG                      CINDER_RESOURCE( ../resources/shaders/, Deferred_glsl.frag, 132, GLSL )
@@ -33,7 +32,10 @@
 #define RES_SHADER_FXAA_VERT			CINDER_RESOURCE( ../resources/shaders/, FXAA_glsl.vert, 145, GLSL )
 #define RES_SHADER_FXAA_FRAG			CINDER_RESOURCE( ../resources/shaders/, FXAA_glsl.frag, 146, GLSL )
 
+#define RES_SHADER_SSUV_FRAG			CINDER_RESOURCE( ../resources/shaders/, ScreenSpaceUV.vert, 147, GLSL )
+
+
 //test Image
-#define RES_EARTH_TEX                   CINDER_RESOURCE( ../resources/, Earth_from_NASA.jpg, 147, IMAGE )
+#define RES_EARTH_TEX                   CINDER_RESOURCE( ../resources/, Earth_from_NASA.jpg, 148, IMAGE )
 
 
