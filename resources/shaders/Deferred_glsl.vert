@@ -1,10 +1,10 @@
 #version 120
 
-varying vec3 vPos, vNormal;
-varying float vDepth; //in eye space
+varying vec3 vPos;
+varying vec3 vNormal;
+varying float vDepth; // in eye space
 
-void main(void)
-{
+void main(void) {
 	gl_Position = ftransform();
     gl_FrontColor = gl_Color;
     gl_TexCoord[0] = gl_MultiTexCoord0;

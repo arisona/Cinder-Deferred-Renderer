@@ -184,7 +184,7 @@ void CinderDeferredRenderingApp::update() {
 }
 
 void CinderDeferredRenderingApp::draw() {
-    mRenderer.render(mRenderMode);
+    mRenderer.render(mRenderMode, true, true);
 	if (mShowParams)
 		mParams.draw();
 }

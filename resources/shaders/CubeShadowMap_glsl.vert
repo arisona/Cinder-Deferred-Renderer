@@ -5,8 +5,7 @@ varying vec4 position_cs;
 varying vec3 normal_cs;
 varying vec3 color;
 
-void main()
-{
+void main() {
     gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 	position_cs = gl_ModelViewMatrix * gl_Vertex;
 	normal_cs = gl_NormalMatrix * gl_Normal;

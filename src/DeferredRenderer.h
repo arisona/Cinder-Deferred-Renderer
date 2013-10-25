@@ -148,12 +148,12 @@ public:
 		//format.setColorInternalFormat(GL_RGBA16F_ARB);
 		//format.setSamples(4); // enable 4x antialiasing
 		
-		//init screen space render
+		// init screen space render
 		mDeferredFBO	= gl::Fbo(mFBOResolution.x, mFBOResolution.y, mtRFBO);
 		mLightGlowFBO   = gl::Fbo(mFBOResolution.x, mFBOResolution.y, format);
-		mPingPongBlurH	= gl::Fbo(mFBOResolution.x/2, mFBOResolution.y/2, format); //don't need as high res on ssao as it will be blurred anyhow ...
-		mPingPongBlurV	= gl::Fbo(mFBOResolution.x/2, mFBOResolution.y/2, format);
-		mSSAOMap		= gl::Fbo(mFBOResolution.x/2, mFBOResolution.y/2, format);
+		mPingPongBlurH	= gl::Fbo(mFBOResolution.x / 2, mFBOResolution.y / 2, format);
+		mPingPongBlurV	= gl::Fbo(mFBOResolution.x / 2, mFBOResolution.y / 2, format);
+		mSSAOMap		= gl::Fbo(mFBOResolution.x / 2, mFBOResolution.y / 2, format);
 		mAllShadowsFBO  = gl::Fbo(mFBOResolution.x, mFBOResolution.y, format);
 		mFinalSSFBO		= gl::Fbo(mFBOResolution.x, mFBOResolution.y, format);
 		
@@ -161,7 +161,7 @@ public:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     }
     
-    void render(RenderMode renderMode) {
+    void render(RenderMode renderMode, bool enableShadows, bool enableSSAO) {
 		// 1. render main scene to FBO
 		
         glClearColor(0.5f, 0.5f, 0.5f, 1);
@@ -211,9 +211,9 @@ public:
                 
 				mFinalSSFBO.getTexture().bind(0);
                 gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize()); //want textures to fill screen
+                gl::setMatricesWindow(getWindowSize());
 				mFXAAShader.bind();
-				mFXAAShader.uniform("buf0", 0);
+				mFXAAShader.uniform("tex", 0);
 				mFXAAShader.uniform("frameBufSize", Vec2f(mFinalSSFBO.getWidth(), mFinalSSFBO.getHeight()));
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
 				mFXAAShader.unbind();
@@ -222,7 +222,7 @@ public:
 				
             case SHOW_DIFFUSE_VIEW:
                 gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize()); //want textures to fill screen
+                gl::setMatricesWindow(getWindowSize());
                 mDeferredFBO.getTexture(0).bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
                 mDeferredFBO.getTexture(0).unbind(0);
@@ -230,10 +230,10 @@ public:
 				
             case SHOW_DEPTH_VIEW:
                 gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize()); //want textures to fill screen
+                gl::setMatricesWindow(getWindowSize());
                 mDeferredFBO.getTexture(1).bind(0);
                 mAlphaToRBG.bind();
-                mAlphaToRBG.uniform("alphaTex", 0);
+                mAlphaToRBG.uniform("tex", 0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
                 mAlphaToRBG.unbind();
                 mDeferredFBO.getTexture(1).unbind(0);
@@ -241,7 +241,7 @@ public:
 				
             case SHOW_POSITION_VIEW:
                 gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize()); //want textures to fill screen
+                gl::setMatricesWindow(getWindowSize());
                 mDeferredFBO.getTexture(2).bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
                 mDeferredFBO.getTexture(2).unbind(0);
@@ -249,7 +249,7 @@ public:
 				
             case SHOW_ATTRIBUTE_VIEW:
                 gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize()); //want textures to fill screen
+                gl::setMatricesWindow(getWindowSize());
                 mDeferredFBO.getTexture(3).bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
                 mDeferredFBO.getTexture(3).unbind(0);
@@ -257,7 +257,7 @@ public:
                 
             case SHOW_NORMALMAP_VIEW:
                 gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize()); //want textures to fill screen
+                gl::setMatricesWindow(getWindowSize());
                 mDeferredFBO.getTexture(1).bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
                 mDeferredFBO.getTexture(1).unbind(0);
@@ -265,7 +265,7 @@ public:
 				
             case SHOW_SSAO_VIEW:
                 gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize()); //want textures to fill screen
+                gl::setMatricesWindow(getWindowSize());
                 mSSAOMap.getTexture().bind(0);
                 mBasicBlender.bind();
                 mBasicBlender.uniform("ssaoTex", 0);
@@ -424,7 +424,7 @@ private:
         //render all shadow layers to one FBO
         mAllShadowsFBO.bindFramebuffer();
         gl::setViewport(mAllShadowsFBO.getBounds());
-        gl::setMatricesWindow((float)mAllShadowsFBO.getWidth(), (float)mAllShadowsFBO.getHeight()); //want textures to fill FBO
+        gl::setMatricesWindow((float)mAllShadowsFBO.getWidth(), (float)mAllShadowsFBO.getHeight());
         glClearColor(0.5f, 0.5f, 0.5f, 0.0);
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -447,7 +447,7 @@ private:
         //render out main scene to FBO
         mSSAOMap.bindFramebuffer();
         gl::setViewport(mSSAOMap.getBounds());
-        gl::setMatricesWindow((float)mSSAOMap.getWidth(), (float)mSSAOMap.getHeight()); //setting orthogonal view as rendering to a fullscreen quad
+        gl::setMatricesWindow((float)mSSAOMap.getWidth(), (float)mSSAOMap.getHeight());
         
         glClearColor(0.5f, 0.5f, 0.5f, 1);
         glClearDepth(1.0f);
@@ -491,8 +491,8 @@ private:
         
         mSSAOMap.getTexture().bind(0);
         mHBlurShader.bind();
-        mHBlurShader.uniform("RTScene", 0);
-        mHBlurShader.uniform("blurStep", 1.0f / mPingPongBlurH.getWidth()); //so that every "blur step" will equal one pixel width of this FBO
+        mHBlurShader.uniform("tex", 0);
+        mHBlurShader.uniform("blurStep", 1.0f / mPingPongBlurH.getWidth());
         gl::drawSolidRect(Rectf(0, 0, mPingPongBlurH.getWidth(), mPingPongBlurH.getHeight()));
         mHBlurShader.unbind();
         mSSAOMap.getTexture().unbind(0);
@@ -508,8 +508,8 @@ private:
         
         mPingPongBlurH.getTexture().bind(0);
         mHBlurShader.bind();
-        mHBlurShader.uniform("RTBlurH", 0);
-        mHBlurShader.uniform("blurStep", 1.0f / mPingPongBlurH.getHeight()); //so that every "blur step" will equal one pixel height of this FBO
+        mHBlurShader.uniform("tex", 0);
+        mHBlurShader.uniform("blurStep", 1.0f / mPingPongBlurH.getHeight());
         gl::drawSolidRect(Rectf(0, 0, mPingPongBlurH.getWidth(), mPingPongBlurH.getHeight()));
         mHBlurShader.unbind();
         mPingPongBlurH.getTexture().unbind(0);
