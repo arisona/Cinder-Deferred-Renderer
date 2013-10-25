@@ -9,7 +9,7 @@ public:
     CameraPersp     mShadowCam;
     CubeShadowMap   mShadowMap;
     gl::Fbo			mCubeDepthFbo;
-    gl::Fbo			mShadowsFbo;
+    gl::Fbo			mShadowFBO;
     
 private:
     Vec3f           mPosition;
@@ -43,13 +43,13 @@ public:
 			formatShadow.setMinFilter(GL_LINEAR);
 			formatShadow.setMagFilter(GL_LINEAR);
 			formatShadow.setWrap(GL_CLAMP, GL_CLAMP);
-			mCubeDepthFbo   = gl::Fbo(mShadowMapRes, mShadowMapRes, formatShadow);
+			mCubeDepthFbo = gl::Fbo(mShadowMapRes, mShadowMapRes, formatShadow);
 			
 			gl::Fbo::Format format;
 			//format.setDepthInternalFormat(GL_DEPTH_COMPONENT32);
 			format.setColorInternalFormat(GL_RGBA16F_ARB);
 			//format.setSamples(4); // enable 4x antialiasing
-			mShadowsFbo	= gl::Fbo(mShadowMapRes, mShadowMapRes, format);
+			mShadowFBO	= gl::Fbo(mShadowMapRes, mShadowMapRes, format);
 		}
     }
     

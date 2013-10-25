@@ -26,39 +26,37 @@ using namespace ci::app;
 
 class DeferredRenderer {
 private:
-    std::function<void(gl::GlslProg*)> mRenderShadowCastersFunc;
-    std::function<void(gl::GlslProg*)> mRenderNonShadowCastersFunc;
+	std::function<void(gl::GlslProg*)> mRenderShadowCastersFunc;
+	std::function<void(gl::GlslProg*)> mRenderNonShadowCastersFunc;
 
-    MayaCamUI* mCamera;
-    
-    Matrix44f mLightFaceViewMatrices[6];
-	
-    gl::Texture mRandomNoise;
-    
-    gl::Fbo mDeferredFBO;
-    gl::Fbo mSSAOMap;
-    gl::Fbo	mPingPongBlurH;
-    gl::Fbo mPingPongBlurV;
-    gl::Fbo mLightGlowFBO;
-    gl::Fbo mAllShadowsFBO;
-	gl::Fbo mFinalSSFBO;
-    
+	MayaCamUI* mCamera;
+	Vec2i mFBOResolution;
+	int mShadowMapResolution;
+
+	Matrix44f mLightFaceViewMatrices[6];
+
+	gl::Texture mRandomNoise;
+
+	gl::GlslProg mDeferredShader;
 	gl::GlslProg mCubeShadowShader;
-	
-    gl::GlslProg mSSAOShader;
-    gl::GlslProg mDeferredShader;
-    gl::GlslProg mBasicBlender;
-    gl::GlslProg mHBlurShader;
-    gl::GlslProg mVBlurShader;
-    gl::GlslProg mLightShader;
-    gl::GlslProg mAlphaToRBG;
+	gl::GlslProg mLightShader;
+	gl::GlslProg mSSAOShader;
+	gl::GlslProg mBlenderShader;
+	gl::GlslProg mHBlurShader;
+	gl::GlslProg mVBlurShader;
+	gl::GlslProg mAlphaToRBGShader;
 	gl::GlslProg mFXAAShader;
-    
-    std::vector<PointLight*> mLights;
-    
-    Vec2i mFBOResolution;
-    int mShadowMapResolution;
-    
+
+	gl::Fbo mDeferredFBO;
+	gl::Fbo mShadowFBO;
+	gl::Fbo mLightFBO;
+	gl::Fbo mSSAOFBO;
+	gl::Fbo	mHBlurFBO;
+	gl::Fbo mVBlurFBO;
+	gl::Fbo mFinalFBO;
+
+	std::vector<PointLight*> mLights;
+
 public:
     enum RenderMode {
         SHOW_FINAL_VIEW,
@@ -124,15 +122,17 @@ public:
 		mRandomNoise = gl::Texture(loadImage(loadResource(NOISE_SAMPLER))); //noise texture required for SSAO calculations
 		
 		// init shaders
-		mSSAOShader			= gl::GlslProg(loadResource(SSAO_VERT), loadResource(SSAO_FRAG));
-		mDeferredShader		= gl::GlslProg(loadResource(DEFER_VERT), loadResource(DEFER_FRAG));
-		mBasicBlender		= gl::GlslProg(loadResource(BBlender_VERT), loadResource(BBlender_FRAG));
-		mHBlurShader		= gl::GlslProg(loadResource(BLUR_H_VERT), loadResource(BLUR_H_FRAG));
-		mVBlurShader		= gl::GlslProg(loadResource(BLUR_V_VERT), loadResource(BLUR_V_FRAG));
-		mLightShader		= gl::GlslProg(loadResource(LIGHT_VERT), loadResource(LIGHT_FRAG));
-		mAlphaToRBG         = gl::GlslProg(loadResource(ALPHA_RGB_VERT), loadResource(ALPHA_RGB_FRAG));
-		mCubeShadowShader   = gl::GlslProg(loadResource(RES_SHADER_CUBESHADOW_VERT), loadResource(RES_SHADER_CUBESHADOW_FRAG));
-		mFXAAShader			= gl::GlslProg(loadResource(RES_SHADER_FXAA_VERT), loadResource(RES_SHADER_FXAA_FRAG));
+		DataSourceRef ssuvVert = loadResource(SHADER_SSUV_VERT);
+		
+		mDeferredShader		= gl::GlslProg(loadResource(SHADER_DEFER_VERT), loadResource(SHADER_DEFER_FRAG));
+		mCubeShadowShader	= gl::GlslProg(loadResource(SHADER_CUBESHADOW_VERT), loadResource(SHADER_CUBESHADOW_FRAG));
+		mLightShader		= gl::GlslProg(loadResource(SHADER_LIGHT_VERT), loadResource(SHADER_LIGHT_FRAG));
+		mSSAOShader			= gl::GlslProg(loadResource(SHADER_SSAO_VERT), loadResource(SHADER_SSAO_FRAG));
+		mBlenderShader		= gl::GlslProg(loadResource(SHADER_BLENDER_VERT), loadResource(SHADER_BLENDER_FRAG));
+		mHBlurShader		= gl::GlslProg(loadResource(SHADER_BLUR_H_VERT), loadResource(SHADER_BLUR_H_FRAG));
+		mVBlurShader		= gl::GlslProg(loadResource(SHADER_BLUR_V_VERT), loadResource(SHADER_BLUR_V_FRAG));
+		mAlphaToRBGShader	= gl::GlslProg(loadResource(SHADER_ALPHA_RGB_VERT), loadResource(SHADER_ALPHA_RGB_FRAG));
+		mFXAAShader			= gl::GlslProg(loadResource(SHADER_FXAA_VERT), loadResource(SHADER_FXAA_FRAG));
 		
 		// init FBOs
 		//this FBO will capture normals, depth, and base diffuse in one render pass (as opposed to three)
@@ -149,13 +149,13 @@ public:
 		//format.setSamples(4); // enable 4x antialiasing
 		
 		// init screen space render
-		mDeferredFBO	= gl::Fbo(mFBOResolution.x, mFBOResolution.y, mtRFBO);
-		mLightGlowFBO   = gl::Fbo(mFBOResolution.x, mFBOResolution.y, format);
-		mPingPongBlurH	= gl::Fbo(mFBOResolution.x / 2, mFBOResolution.y / 2, format);
-		mPingPongBlurV	= gl::Fbo(mFBOResolution.x / 2, mFBOResolution.y / 2, format);
-		mSSAOMap		= gl::Fbo(mFBOResolution.x / 2, mFBOResolution.y / 2, format);
-		mAllShadowsFBO  = gl::Fbo(mFBOResolution.x, mFBOResolution.y, format);
-		mFinalSSFBO		= gl::Fbo(mFBOResolution.x, mFBOResolution.y, format);
+		mDeferredFBO = gl::Fbo(mFBOResolution.x, mFBOResolution.y, mtRFBO);
+		mShadowFBO = gl::Fbo(mFBOResolution.x, mFBOResolution.y, format);
+		mLightFBO = gl::Fbo(mFBOResolution.x, mFBOResolution.y, format);
+		mSSAOFBO = gl::Fbo(mFBOResolution.x / 2, mFBOResolution.y / 2, format);
+		mHBlurFBO = gl::Fbo(mFBOResolution.x / 2, mFBOResolution.y / 2, format);
+		mVBlurFBO = gl::Fbo(mFBOResolution.x / 2, mFBOResolution.y / 2, format);
+		mFinalFBO = gl::Fbo(mFBOResolution.x, mFBOResolution.y, format);
 		
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -188,36 +188,36 @@ public:
             case SHOW_FINAL_VIEW:
                 pingPongBlurSSAO();
 				
-				mFinalSSFBO.bindFramebuffer();
+				mFinalFBO.bindFramebuffer();
 				glClearColor(0.5f, 0.5f, 0.5f, 1);
 				glClearDepth(1.0f);
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                gl::setMatricesWindow((float)mFinalSSFBO.getWidth(), (float)mFinalSSFBO.getHeight());
-                gl::setViewport(mFinalSSFBO.getBounds());
-                mPingPongBlurV.getTexture().bind(0);
-                mAllShadowsFBO.getTexture().bind(1);
-                mLightGlowFBO.getTexture().bind(2);
-                mBasicBlender.bind();
-                mBasicBlender.uniform("ssaoTex", 0);
-                mBasicBlender.uniform("shadowsTex", 1);
-                mBasicBlender.uniform("baseTex", 2);
-                gl::drawSolidRect(Rectf(0, 0, mFinalSSFBO.getWidth(), mFinalSSFBO.getHeight()));
-                mBasicBlender.unbind();
-                mLightGlowFBO.getTexture().unbind(2);
-                mAllShadowsFBO.getTexture().unbind(1);
-                mPingPongBlurV.getTexture().unbind(0);
+                gl::setMatricesWindow((float)mFinalFBO.getWidth(), (float)mFinalFBO.getHeight());
+                gl::setViewport(mFinalFBO.getBounds());
+                mVBlurFBO.getTexture().bind(0);
+                mShadowFBO.getTexture().bind(1);
+                mLightFBO.getTexture().bind(2);
+                mBlenderShader.bind();
+                mBlenderShader.uniform("ssaoTex", 0);
+                mBlenderShader.uniform("shadowsTex", 1);
+                mBlenderShader.uniform("baseTex", 2);
+                gl::drawSolidRect(Rectf(0, 0, mFinalFBO.getWidth(), mFinalFBO.getHeight()));
+                mBlenderShader.unbind();
+                mLightFBO.getTexture().unbind(2);
+                mShadowFBO.getTexture().unbind(1);
+                mVBlurFBO.getTexture().unbind(0);
                 
-				mFinalSSFBO.unbindFramebuffer();
+				mFinalFBO.unbindFramebuffer();
                 
-				mFinalSSFBO.getTexture().bind(0);
+				mFinalFBO.getTexture().bind(0);
                 gl::setViewport(getWindowBounds());
                 gl::setMatricesWindow(getWindowSize());
 				mFXAAShader.bind();
 				mFXAAShader.uniform("tex", 0);
-				mFXAAShader.uniform("frameBufSize", Vec2f(mFinalSSFBO.getWidth(), mFinalSSFBO.getHeight()));
+				mFXAAShader.uniform("frameBufSize", Vec2f(mFinalFBO.getWidth(), mFinalFBO.getHeight()));
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
 				mFXAAShader.unbind();
-				mFinalSSFBO.getTexture().unbind(0);
+				mFinalFBO.getTexture().unbind(0);
                 break;
 				
             case SHOW_DIFFUSE_VIEW:
@@ -232,10 +232,10 @@ public:
                 gl::setViewport(getWindowBounds());
                 gl::setMatricesWindow(getWindowSize());
                 mDeferredFBO.getTexture(1).bind(0);
-                mAlphaToRBG.bind();
-                mAlphaToRBG.uniform("tex", 0);
+                mAlphaToRBGShader.bind();
+                mAlphaToRBGShader.uniform("tex", 0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
-                mAlphaToRBG.unbind();
+                mAlphaToRBGShader.unbind();
                 mDeferredFBO.getTexture(1).unbind(0);
                 break;
 				
@@ -266,39 +266,39 @@ public:
             case SHOW_SSAO_VIEW:
                 gl::setViewport(getWindowBounds());
                 gl::setMatricesWindow(getWindowSize());
-                mSSAOMap.getTexture().bind(0);
-                mBasicBlender.bind();
-                mBasicBlender.uniform("ssaoTex", 0);
-                mBasicBlender.uniform("shadowsTex", 0);
-                mBasicBlender.uniform("baseTex", 0);
+                mSSAOFBO.getTexture().bind(0);
+                mBlenderShader.bind();
+                mBlenderShader.uniform("ssaoTex", 0);
+                mBlenderShader.uniform("shadowsTex", 0);
+                mBlenderShader.uniform("baseTex", 0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
-                mBasicBlender.unbind();
-                mSSAOMap.getTexture().unbind(0);
+                mBlenderShader.unbind();
+                mSSAOFBO.getTexture().unbind(0);
                 break;
 				
             case SHOW_SSAO_BLURRED_VIEW:
                 pingPongBlurSSAO();
                 gl::setViewport(getWindowBounds());
                 gl::setMatricesWindow(getWindowSize());
-                mPingPongBlurV.getTexture().bind(0);
+                mVBlurFBO.getTexture().bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
-                mPingPongBlurV.getTexture().unbind(0);
+                mVBlurFBO.getTexture().unbind(0);
                 break;
 				
             case SHOW_LIGHT_VIEW:
                 gl::setViewport(getWindowBounds());
                 gl::setMatricesWindow(getWindowSize());
-                mLightGlowFBO.getTexture().bind(0);
+                mLightFBO.getTexture().bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
-                mLightGlowFBO.getTexture().unbind(0);
+                mLightFBO.getTexture().unbind(0);
                 break;
 				
             case SHOW_SHADOWS_VIEW:
                 gl::setViewport(getWindowBounds());
                 gl::setMatricesWindow(getWindowSize());
-                mAllShadowsFBO.getTexture().bind(0);
+                mShadowFBO.getTexture().bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
-                mAllShadowsFBO.getTexture().unbind(0);
+                mShadowFBO.getTexture().unbind(0);
                 break;
         }
     }
@@ -385,13 +385,13 @@ private:
             if (!light->isShadowCaster())
 				continue;
             
-            light->mShadowsFbo.bindFramebuffer();
+            light->mShadowFBO.bindFramebuffer();
             
             glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
             //glDrawBuffer(GL_BACK);
             //glReadBuffer(GL_BACK);
-            gl::setViewport(light->mShadowsFbo.getBounds());
+            gl::setViewport(light->mShadowFBO.getBounds());
             
             glCullFace(GL_BACK); //don't need what we won't see
             
@@ -417,14 +417,14 @@ private:
             
             mCubeShadowShader.unbind();
             
-            light->mShadowsFbo.unbindFramebuffer();
+            light->mShadowFBO.unbindFramebuffer();
         }
         glDisable(GL_CULL_FACE);
         
         //render all shadow layers to one FBO
-        mAllShadowsFBO.bindFramebuffer();
-        gl::setViewport(mAllShadowsFBO.getBounds());
-        gl::setMatricesWindow((float)mAllShadowsFBO.getWidth(), (float)mAllShadowsFBO.getHeight());
+        mShadowFBO.bindFramebuffer();
+        gl::setViewport(mShadowFBO.getBounds());
+        gl::setMatricesWindow((float)mShadowFBO.getWidth(), (float)mShadowFBO.getHeight());
         glClearColor(0.5f, 0.5f, 0.5f, 0.0);
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -434,20 +434,20 @@ private:
             if (!light->isShadowCaster())
 				continue;
             
-            light->mShadowsFbo.getTexture().bind();
+            light->mShadowFBO.getTexture().bind();
 			//this is different as we are not using shaders to color these quads (need to fit viewport)
-            gl::drawSolidRect(Rectf(0, (float)mAllShadowsFBO.getHeight(), (float)mAllShadowsFBO.getWidth(), 0));
-            light->mShadowsFbo.getTexture().unbind();
+            gl::drawSolidRect(Rectf(0, (float)mShadowFBO.getHeight(), (float)mShadowFBO.getWidth(), 0));
+            light->mShadowFBO.getTexture().unbind();
         }
         gl::disableAlphaBlending();
-        mAllShadowsFBO.unbindFramebuffer();
+        mShadowFBO.unbindFramebuffer();
     }
     
     void renderSSAOToFBO() {
         //render out main scene to FBO
-        mSSAOMap.bindFramebuffer();
-        gl::setViewport(mSSAOMap.getBounds());
-        gl::setMatricesWindow((float)mSSAOMap.getWidth(), (float)mSSAOMap.getHeight());
+        mSSAOFBO.bindFramebuffer();
+        gl::setViewport(mSSAOFBO.getBounds());
+        gl::setMatricesWindow((float)mSSAOFBO.getWidth(), (float)mSSAOFBO.getHeight());
         
         glClearColor(0.5f, 0.5f, 0.5f, 1);
         glClearDepth(1.0f);
@@ -459,61 +459,61 @@ private:
         mSSAOShader.uniform("rnm", 0);
         mSSAOShader.uniform("normalMap", 1);
         
-        gl::drawSolidRect(Rectf(0, 0, mSSAOMap.getWidth(), mSSAOMap.getHeight()));
+        gl::drawSolidRect(Rectf(0, 0, mSSAOFBO.getWidth(), mSSAOFBO.getHeight()));
         
         mSSAOShader.unbind();
         
         mDeferredFBO.getTexture(1).unbind(1);
         mRandomNoise.unbind(0);
         
-        mSSAOMap.unbindFramebuffer();
+        mSSAOFBO.unbindFramebuffer();
     }
     
     void renderLightsToFBO() {
-        mLightGlowFBO.bindFramebuffer();
-        gl::setViewport(mLightGlowFBO.getBounds());
+        mLightFBO.bindFramebuffer();
+        gl::setViewport(mLightFBO.getBounds());
         glClearColor(0.0f, 0.0f, 0.0f, 1.0);
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         //draw glowing cubes
         renderLights();
-        mLightGlowFBO.unbindFramebuffer();
+        mLightFBO.unbindFramebuffer();
     }
     
     void pingPongBlurSSAO() {
         //--------- render horizontal blur first --------------
-        mPingPongBlurH.bindFramebuffer();
-        gl::setMatricesWindow((float)mPingPongBlurH.getWidth(), (float)mPingPongBlurH.getHeight());
-        gl::setViewport(mPingPongBlurH.getBounds());
+        mHBlurFBO.bindFramebuffer();
+        gl::setMatricesWindow((float)mHBlurFBO.getWidth(), (float)mHBlurFBO.getHeight());
+        gl::setViewport(mHBlurFBO.getBounds());
         glClearColor(0.5f, 0.5f, 0.5f, 1);
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        mSSAOMap.getTexture().bind(0);
+        mSSAOFBO.getTexture().bind(0);
         mHBlurShader.bind();
         mHBlurShader.uniform("tex", 0);
-        mHBlurShader.uniform("blurStep", 1.0f / mPingPongBlurH.getWidth());
-        gl::drawSolidRect(Rectf(0, 0, mPingPongBlurH.getWidth(), mPingPongBlurH.getHeight()));
+        mHBlurShader.uniform("blurStep", 1.0f / mHBlurFBO.getWidth());
+        gl::drawSolidRect(Rectf(0, 0, mHBlurFBO.getWidth(), mHBlurFBO.getHeight()));
         mHBlurShader.unbind();
-        mSSAOMap.getTexture().unbind(0);
-        mPingPongBlurH.unbindFramebuffer();
+        mSSAOFBO.getTexture().unbind(0);
+        mHBlurFBO.unbindFramebuffer();
         
         //--------- now render vertical blur --------------
-        mPingPongBlurV.bindFramebuffer();
-        gl::setViewport(mPingPongBlurV.getBounds());
-        gl::setMatricesWindow((float)mPingPongBlurV.getWidth(), (float)mPingPongBlurV.getHeight());
+        mVBlurFBO.bindFramebuffer();
+        gl::setViewport(mVBlurFBO.getBounds());
+        gl::setMatricesWindow((float)mVBlurFBO.getWidth(), (float)mVBlurFBO.getHeight());
         glClearColor(0.5f, 0.5f, 0.5f, 1);
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        mPingPongBlurH.getTexture().bind(0);
-        mHBlurShader.bind();
-        mHBlurShader.uniform("tex", 0);
-        mHBlurShader.uniform("blurStep", 1.0f / mPingPongBlurH.getHeight());
-        gl::drawSolidRect(Rectf(0, 0, mPingPongBlurH.getWidth(), mPingPongBlurH.getHeight()));
-        mHBlurShader.unbind();
-        mPingPongBlurH.getTexture().unbind(0);
-        mPingPongBlurV.unbindFramebuffer();
+        mHBlurFBO.getTexture().bind(0);
+        mVBlurShader.bind();
+        mVBlurShader.uniform("tex", 0);
+        mVBlurShader.uniform("blurStep", 1.0f / mVBlurFBO.getHeight());
+        gl::drawSolidRect(Rectf(0, 0, mVBlurFBO.getWidth(), mVBlurFBO.getHeight()));
+        mVBlurShader.unbind();
+        mHBlurFBO.getTexture().unbind(0);
+        mVBlurFBO.unbindFramebuffer();
     }
     
     void renderLights() {
