@@ -58,18 +58,22 @@
 using namespace ci;
 using namespace std;
 
-static const float APP_RES_HORIZONTAL = 1024.0f;
-static const float APP_RES_VERTICAL = 768.0f;
 
-static const Vec3f CAM_POSITION_INIT(-14.0f, 7.0f, -14.0f);
-static const Vec3f LIGHT_POSITION_INIT(3.0f, 1.5f, 0.0f);
 
 
 class CinderDeferredRenderingApp : public AppBasic {
-    static const int SCENE_SIZE = 3000;
-	static const int NUM_LIGHTS = 500;
+	const int APP_RES_HORIZONTAL = 1024;
+	const int APP_RES_VERTICAL = 768;
+
+    const int SCENE_SIZE = 3000;
+	const int NUM_LIGHTS = 500;
+
+	const Vec3f CAM_POSITION_INIT = Vec3f(-14.0f, 7.0f, -14.0f);
+	const Vec3f LIGHT_POSITION_INIT = Vec3f(3.0f, 1.5f, 0.0f);
+	const float LIGHT_BRIGHTNESS_DEFAULT = 60.0f;
 	
 public:
+
     CinderDeferredRenderingApp();
     virtual ~CinderDeferredRenderingApp();
     void prepareSettings(Settings* settings);
@@ -138,13 +142,8 @@ void CinderDeferredRenderingApp::setup() {
 	mRenderer.setup(shadowCasterFunc, noShadowCasterFunc, &mCamera, Vec2i(APP_RES_HORIZONTAL, APP_RES_VERTICAL), 1024);
     
     // have these point lights cast shadows
-    mRenderer.addLight(Vec3f(-2.0f, 4.0f, 6.0f),
-					   Color(0.10f, 0.69f, 0.93f) * LIGHT_BRIGHTNESS_DEFAULT,
-					   true);
-	
-    mRenderer.addLight(Vec3f(4.0f, 6.0f, -4.0f),
-					   Color(0.94f, 0.15f, 0.23f) * LIGHT_BRIGHTNESS_DEFAULT,
-					   true);
+    mRenderer.addLight(Vec3f(-2.0f, 4.0f, 6.0f), Color(0.10f, 0.69f, 0.93f) * LIGHT_BRIGHTNESS_DEFAULT, true);
+    mRenderer.addLight(Vec3f(4.0f, 6.0f, -4.0f), Color(0.94f, 0.15f, 0.23f) * LIGHT_BRIGHTNESS_DEFAULT, true);
     
     // add a bunch of lights that don't cast shadows
     for (int i = 0; i < NUM_LIGHTS; ++i) {
@@ -171,9 +170,7 @@ void CinderDeferredRenderingApp::setup() {
                 break;
         };
         
-        mRenderer.addLight(Vec3f(Rand::randFloat(-1000.0f, 1000.0f),
-								 Rand::randFloat(0.0f, 50.0f),
-								 Rand::randFloat(-1000.0f, 1000.0f)),
+        mRenderer.addLight(Vec3f(Rand::randFloat(-1000, 1000), Rand::randFloat(0, 50), Rand::randFloat(-1000, 1000)),
 						   randCol * LIGHT_BRIGHTNESS_DEFAULT);
 		
     }

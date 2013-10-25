@@ -18,101 +18,11 @@
 #include "cinder/ImageIo.h"
 #include "cinder/MayaCamUI.h"
 
+#include "PointLight.h"
 #include "CubeShadowMap.h"
 
 using namespace ci;
 using namespace ci::app;
-
-static const float  LIGHT_CUTOFF_DEFAULT = 0.001f;
-static const float  LIGHT_BRIGHTNESS_DEFAULT = 60;
-
-class PointSourceLight {
-public:
-    float           mCubeSize;
-    CameraPersp     mShadowCam;
-    CubeShadowMap   mShadowMap;
-    gl::Fbo			mCubeDepthFbo;
-    gl::Fbo			mShadowsFbo;
-    
-private:
-    Vec3f           mPosition;
-    Color           mColor;
-    bool            mCastShadows;
-    bool            mVisible;
-    int             mShadowMapRes;
-    float           mAOEDist; // AOE = area of effect
-    
-public:
-	PointSourceLight(Vec3f position, Color color, int shadowMapRes, bool castsShadows = false, bool visible = true) {
-        mPosition = position;
-        mColor = color;
-        mAOEDist = sqrt(color.length() / LIGHT_CUTOFF_DEFAULT);
-        mCubeSize = 2.0f;
-        mShadowMapRes = shadowMapRes;
-        
-        //set up fake "light" to grab matrix calculations from
-        mShadowCam.setPerspective(90.0f, 1.0f, 1.0f, 100.0f);
-        mShadowCam.lookAt(position, Vec3f(position.x, 0, position.z));
-        
-        mCastShadows = castsShadows;
-        mVisible = visible;
-        if (mCastShadows) {
-			//set up cube map for point shadows
-			mShadowMap.setup(mShadowMapRes);
-			
-			//create FBO to hold depth values from cube map
-			gl::Fbo::Format formatShadow;
-			formatShadow.enableColorBuffer(true, 1);
-			formatShadow.enableDepthBuffer(true, true);
-			formatShadow.setMinFilter(GL_LINEAR);
-			formatShadow.setMagFilter(GL_LINEAR);
-			formatShadow.setWrap(GL_CLAMP, GL_CLAMP);
-			mCubeDepthFbo   = gl::Fbo(mShadowMapRes, mShadowMapRes, formatShadow);
-			
-			gl::Fbo::Format format;
-			//format.setDepthInternalFormat(GL_DEPTH_COMPONENT32);
-			format.setColorInternalFormat(GL_RGBA16F_ARB);
-			//format.setSamples(4); // enable 4x antialiasing
-			mShadowsFbo	= gl::Fbo(mShadowMapRes, mShadowMapRes, format);
-		}
-    }
-    
-	void setPosition(const Vec3f& position) {
-        mShadowCam.lookAt(position, Vec3f(position.x, 0.0f, position.z));
-        mPosition = position;
-    }
-    
-    Vec3f getPosition() const {
-        return mPosition;
-    }
-    
-	void setColor(const Color color) {
-        mColor = color;
-        mAOEDist = sqrt(color.length() / LIGHT_CUTOFF_DEFAULT);
-    }
-    
-    Color getColor() const {
-        return mColor;
-    }
-    
-    float getAOEDist() const {
-        return mAOEDist;
-    }
-    
-	void renderCube() const {
-        if (mVisible) {
-            gl::drawCube(mPosition, Vec3f(mCubeSize, mCubeSize, mCubeSize));
-        }
-    }
-    
-    void renderCubeAOE() const {
-        gl::drawCube(mPosition, Vec3f(mAOEDist, mAOEDist, mAOEDist));
-    }
-    
-    bool doesCastShadows() const {
-		return mCastShadows;
-	}
-};
 
 class DeferredRenderer {
 private:
@@ -144,7 +54,7 @@ private:
     gl::GlslProg mAlphaToRBG;
 	gl::GlslProg mFXAAShader;
     
-    std::vector<PointSourceLight*> mLights;
+    std::vector<PointLight*> mLights;
     
     Vec2i mFBOResolution;
     int mShadowMapResolution;
@@ -393,56 +303,55 @@ public:
         }
     }
 
-    std::vector<PointSourceLight*>& getLights() {
+    std::vector<PointLight*>& getLights() {
 		return mLights;
 	};
 	
     void addLight(const Vec3f position, const Color color, const bool castsShadows = false, const bool visible = true) {
-        mLights.push_back(new PointSourceLight(position, color, mShadowMapResolution, castsShadows, visible));
+        mLights.push_back(new PointLight(position, color, mShadowMapResolution, castsShadows, visible));
     }
     
 private:
-    void renderSceneToDeferredFBO() {
-        mDeferredFBO.bindFramebuffer();
-        gl::setViewport(mDeferredFBO.getBounds());
-        gl::setMatrices(mCamera->getCamera());
-        
-        glClearColor(0.5f, 0.5f, 0.5f, 1);
-        glClearDepth(1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        mDeferredShader.bind();
-        mDeferredShader.uniform("diff_coeff", 0.15f);
-        mDeferredShader.uniform("phong_coeff", 0.3f);
-        mDeferredShader.uniform("two_sided", 0.8f);
-        mDeferredShader.uniform("useTexture", 0.0f);
-        
-        drawLightMeshes();
-        
-        mDeferredShader.bind();
-        mDeferredShader.uniform("diff_coeff", 1.0f);
-        mDeferredShader.uniform("phong_coeff", 0.0f);
-        mDeferredShader.uniform("two_sided", 0.8f);
-        
-        if (mRenderShadowCastersFunc) {
-			mRenderShadowCastersFunc(&mDeferredShader);
-		}
+	void renderSceneToDeferredFBO() {
+		mDeferredFBO.bindFramebuffer();
+		gl::setViewport(mDeferredFBO.getBounds());
+		gl::setMatrices(mCamera->getCamera());
 		
-        if (mRenderNonShadowCastersFunc) {
+		glClearColor(0.5f, 0.5f, 0.5f, 1);
+		glClearDepth(1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		// render deferred light geometry
+		mDeferredShader.bind();
+		mDeferredShader.uniform("diff_coeff", 0.15f);
+		mDeferredShader.uniform("phong_coeff", 0.3f);
+		mDeferredShader.uniform("two_sided", 0.8f);
+		mDeferredShader.uniform("useTexture", 0.0f);
+		renderLightGeometry();
+		
+		// render deferred geometry
+		//mDeferredShader.bind();
+		mDeferredShader.uniform("diff_coeff", 1.0f);
+		mDeferredShader.uniform("phong_coeff", 0.0f);
+		mDeferredShader.uniform("two_sided", 0.8f);
+		
+		if (mRenderShadowCastersFunc)
+			mRenderShadowCastersFunc(&mDeferredShader);
+		
+		if (mRenderNonShadowCastersFunc)
 			mRenderNonShadowCastersFunc(&mDeferredShader);
-		}
-        
-        mDeferredShader.unbind();
-        mDeferredFBO.unbindFramebuffer();
-    }
+		
+		mDeferredShader.unbind();
+		mDeferredFBO.unbindFramebuffer();
+	}
 
     void createShadowMaps() {
         //render depth map cube
 		if (!mRenderShadowCastersFunc)
 			return
         glEnable(GL_CULL_FACE);
-		for (PointSourceLight* light : mLights) {
-            if (!light->doesCastShadows())
+		for (PointLight* light : mLights) {
+            if (!light->isShadowCaster())
 				continue;
             
             light->mCubeDepthFbo.bindFramebuffer();
@@ -472,8 +381,8 @@ private:
     
     void renderShadowsToFBOs() {
         glEnable(GL_CULL_FACE);
-		for (PointSourceLight* light : mLights) {
-            if (!light->doesCastShadows())
+		for (PointLight* light : mLights) {
+            if (!light->isShadowCaster())
 				continue;
             
             light->mShadowsFbo.bindFramebuffer();
@@ -499,9 +408,9 @@ private:
             mCubeShadowShader.uniform("light_view_matrix", light->mShadowCam.getModelViewMatrix());
             mCubeShadowShader.uniform("light_projection_matrix", light->mShadowCam.getProjectionMatrix());
             
+			renderLightGeometry();
 			if (mRenderShadowCastersFunc) { mRenderShadowCastersFunc(nullptr); }
 			if (mRenderNonShadowCastersFunc) { mRenderNonShadowCastersFunc(nullptr); }
-			drawLightMeshes();
             
             light->mShadowMap.unbind();
             glDisable(GL_TEXTURE_CUBE_MAP);
@@ -521,8 +430,8 @@ private:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         gl::enableAlphaBlending();
         
-		for (PointSourceLight* light : mLights) {
-            if (!light->doesCastShadows())
+		for (PointLight* light : mLights) {
+            if (!light->isShadowCaster())
 				continue;
             
             light->mShadowsFbo.getTexture().bind();
@@ -607,19 +516,6 @@ private:
         mPingPongBlurV.unbindFramebuffer();
     }
     
-    void drawLightMeshes(gl::GlslProg* shader = nullptr) {
-        for (PointSourceLight* light : mLights) {
-            if (shader != nullptr) {
-                shader->uniform("lightPos", mCamera->getCamera().getModelViewMatrix().transformPointAffine(light->getPosition()));
-                shader->uniform("lightCol", light->getColor());
-                shader->uniform("dist", light->getAOEDist());
-                light->renderCubeAOE(); // render the proxy shape
-            } else {
-                light->renderCube(); // render the proxy shape
-            }
-        }
-    }
-
     void renderLights() {
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE); //set blend function
@@ -639,17 +535,32 @@ private:
         mLightShader.uniform("attrMap", 3);
         mLightShader.uniform("camPosition", mCamera->getCamera().getEyePoint());
         
-        drawLightMeshes(&mLightShader);
+		// render  proxy shapes
+        for (PointLight* light : mLights) {
+			float distance = light->getAOEDistance();
+			mLightShader.uniform("lightPos", mCamera->getCamera().getModelViewMatrix().transformPointAffine(light->getPosition()));
+			mLightShader.uniform("lightCol", light->getColor());
+			mLightShader.uniform("dist", distance);
+			gl::drawCube(light->getPosition(), Vec3f(distance, distance, distance));
+        }
         
-        mLightShader.unbind(); //unbind and reset everything to desired values
-        mDeferredFBO.getTexture(2).unbind(0); //bind position, normal and color textures from deferred shading pass
-        mDeferredFBO.getTexture(1).unbind(1); //bind normal tex
-        mDeferredFBO.getTexture(0).unbind(2); //bind color tex
-        mDeferredFBO.getTexture(3).unbind(3); //bind attr tex
+        mLightShader.unbind();
+        mDeferredFBO.getTexture(2).unbind(0);
+        mDeferredFBO.getTexture(1).unbind(1);
+        mDeferredFBO.getTexture(0).unbind(2);
+        mDeferredFBO.getTexture(3).unbind(3);
         
         glDisable(GL_CULL_FACE);
         glEnable(GL_DEPTH_TEST);
         glDepthMask(true);
         glDisable(GL_BLEND);
     }
+	
+	void renderLightGeometry() {
+		for (PointLight* light : mLights) {
+			if (light->isVisible()) {
+				gl::drawCube(light->getPosition(), Vec3f(2, 2, 2));
+			}
+		}
+	}
 };
