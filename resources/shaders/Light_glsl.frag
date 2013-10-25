@@ -1,10 +1,11 @@
 #version 120
 
 //input parameters
-uniform sampler2D positionMap;
-uniform sampler2D normalMap;
 uniform sampler2D colorMap;
+uniform sampler2D normalMap;
+uniform sampler2D positionMap;
 uniform sampler2D attrMap;
+
 uniform vec3 camPos;
 uniform vec3 lightPos;
 uniform vec3 lightCol;
@@ -18,7 +19,8 @@ void main(void) {
 
 	vec3 VP = lightPos - p.xyz;						// vector between light and point
 	float d = length(VP);							// get the distance between the light and point
-	if(d > dist) discard;							// if outside of area of effect, discard pixel
+	if (d > dist) discard;							// if outside of area of effect, discard pixel
+
 	VP /= d;										// normalize vector between light and point (divide by distance)
 	vec4 norm = texture2D(normalMap, coord);		// get the normal from deferred shading
 	vec4 col = texture2D(colorMap, coord);			// get the color from deferred shading

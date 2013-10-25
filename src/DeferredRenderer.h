@@ -139,7 +139,7 @@ public:
 		
 		// special fbo format for deferred buffer
 		// 4 color attachments:
-		// - diffuse (rgba)
+		// - diffuse color (rgba)
 		// - normal + depth (rgb + a)
 		// - position (rgb + a ignored)
 		// - diff_coeff + phong_coeff + two_sides (rgb + a ignored)
@@ -180,12 +180,9 @@ public:
         gl::setMatrices(mCamera->getCamera());
         renderSceneToDeferredFBO();
         
-		// 2. create shadow maps, and render shadows to FBOs
+		// 2. create shadow maps and render shadows to FBOs
 		
-		if (enableShadows) {
-			createShadowMaps();
-			renderShadowsToFBOs();
-		}
+		if (enableShadows) renderShadowsToFBOs();
         
 		// 3. render lights & ssao to FBO
 		
@@ -197,7 +194,7 @@ public:
 		
         switch (renderMode) {
             case SHOW_FINAL_VIEW: // key 0
-                pingPongBlurSSAO();
+                renderPingPongBlurToFBO();
 				
 				mFinalFBO.bindFramebuffer();
 				glClearColor(0.5f, 0.5f, 0.5f, 1);
@@ -287,7 +284,7 @@ public:
                 break;
 				
             case SHOW_SSAO_BLURRED_VIEW: // key 7
-                pingPongBlurSSAO();
+                renderPingPongBlurToFBO();
                 gl::setViewport(getWindowBounds());
                 gl::setMatricesWindow(getWindowSize(), false);
                 mVBlurFBO.getTexture().bind(0);
@@ -354,11 +351,12 @@ private:
 		mDeferredFBO.unbindFramebuffer();
 	}
 
-    void createShadowMaps() {
-        //render depth map cube
+    void renderShadowsToFBOs() {
 		if (!mRenderShadowCastersFunc)
 			return
-        glEnable(GL_CULL_FACE);
+			glEnable(GL_CULL_FACE);
+
+        // create shadow maps
 		for (PointLight* light : mLights) {
             if (!light->isShadowCaster())
 				continue;
@@ -380,16 +378,13 @@ private:
                 
                 glLoadMatrixf(mLightFaceViewMatrices[i]);
                 glMultMatrixf(light->mShadowCam.getModelViewMatrix());
-					mRenderShadowCastersFunc(0);
+				mRenderShadowCastersFunc(0);
             }
             
             light->mCubeDepthFbo.unbindFramebuffer();
 		}
-        glDisable(GL_CULL_FACE);
-    }
-    
-    void renderShadowsToFBOs() {
-        glEnable(GL_CULL_FACE);
+
+		// render each shadow layer
 		for (PointLight* light : mLights) {
             if (!light->isShadowCaster())
 				continue;
@@ -430,7 +425,7 @@ private:
         }
         glDisable(GL_CULL_FACE);
         
-        //render all shadow layers to one FBO
+        // render all shadow layers to one FBO
         mShadowFBO.bindFramebuffer();
         gl::setViewport(mShadowFBO.getBounds());
         gl::setMatricesWindow((float)mShadowFBO.getWidth(), (float)mShadowFBO.getHeight());
@@ -452,118 +447,117 @@ private:
         mShadowFBO.unbindFramebuffer();
     }
     
-    void renderSSAOToFBO() {
-        //render out main scene to FBO
-        mSSAOFBO.bindFramebuffer();
-        gl::setViewport(mSSAOFBO.getBounds());
-        gl::setMatricesWindow((float)mSSAOFBO.getWidth(), (float)mSSAOFBO.getHeight());
-        
-        glClearColor(0.5f, 0.5f, 0.5f, 1);
-        glClearDepth(1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        mRandomNoise.bind(0);
-        mDeferredFBO.getTexture(1).bind(1);
-        mSSAOShader.bind();
-        mSSAOShader.uniform("rnm", 0);
-        mSSAOShader.uniform("normalMap", 1);
-        
-        gl::drawSolidRect(Rectf(0, 0, mSSAOFBO.getWidth(), mSSAOFBO.getHeight()));
-        
-        mSSAOShader.unbind();
-        
-        mDeferredFBO.getTexture(1).unbind(1);
-        mRandomNoise.unbind(0);
-        
-        mSSAOFBO.unbindFramebuffer();
-    }
-    
-    void renderLightsToFBO() {
-        mLightFBO.bindFramebuffer();
-        gl::setViewport(mLightFBO.getBounds());
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0);
-        glClearDepth(1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        //draw glowing cubes
-        renderLights();
-        mLightFBO.unbindFramebuffer();
-    }
-    
-    void pingPongBlurSSAO() {
-        //--------- render horizontal blur first --------------
-        mHBlurFBO.bindFramebuffer();
-        gl::setMatricesWindow((float)mHBlurFBO.getWidth(), (float)mHBlurFBO.getHeight());
-        gl::setViewport(mHBlurFBO.getBounds());
-        glClearColor(0.5f, 0.5f, 0.5f, 1);
-        glClearDepth(1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        mSSAOFBO.getTexture().bind(0);
-        mHBlurShader.bind();
-        mHBlurShader.uniform("tex", 0);
-        mHBlurShader.uniform("blurStep", 1.0f / mHBlurFBO.getWidth());
-        gl::drawSolidRect(Rectf(0, 0, mHBlurFBO.getWidth(), mHBlurFBO.getHeight()));
-        mHBlurShader.unbind();
-        mSSAOFBO.getTexture().unbind(0);
-        mHBlurFBO.unbindFramebuffer();
-        
-        //--------- now render vertical blur --------------
-        mVBlurFBO.bindFramebuffer();
-        gl::setViewport(mVBlurFBO.getBounds());
-        gl::setMatricesWindow((float)mVBlurFBO.getWidth(), (float)mVBlurFBO.getHeight());
-        glClearColor(0.5f, 0.5f, 0.5f, 1);
-        glClearDepth(1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        mHBlurFBO.getTexture().bind(0);
-        mVBlurShader.bind();
-        mVBlurShader.uniform("tex", 0);
-        mVBlurShader.uniform("blurStep", 1.0f / mVBlurFBO.getHeight());
-        gl::drawSolidRect(Rectf(0, 0, mVBlurFBO.getWidth(), mVBlurFBO.getHeight()));
-        mVBlurShader.unbind();
-        mHBlurFBO.getTexture().unbind(0);
-        mVBlurFBO.unbindFramebuffer();
-    }
-    
-    void renderLights() {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE);
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_FRONT);
-        glDisable(GL_DEPTH_TEST);
-        glDepthMask(false);
-        
-        mLightShader.bind(); //bind point light pixel shader
-        mDeferredFBO.getTexture(2).bind(0); // bind position, normal and color textures from deferred shading pass
-        mLightShader.uniform("positionMap", 0);
-        mDeferredFBO.getTexture(1).bind(1); // bind normal tex
-        mLightShader.uniform("normalMap", 1);
-        mDeferredFBO.getTexture(0).bind(2); // bind color tex
-        mLightShader.uniform("colorMap", 2);
-        mDeferredFBO.getTexture(3).bind(3); // bind attr tex
-        mLightShader.uniform("attrMap", 3);
-        mLightShader.uniform("camPosition", mCamera->getCamera().getEyePoint());
-        
+	void renderLightsToFBO() {
+		mLightFBO.bindFramebuffer();
+		gl::setViewport(mLightFBO.getBounds());
+
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0);
+		glClearDepth(1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE);
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_FRONT);
+		glDisable(GL_DEPTH_TEST);
+		glDepthMask(GL_FALSE);
+		
+		mLightShader.bind(); //bind point light pixel shader
+		mDeferredFBO.getTexture(0).bind(0); // bind color tex
+		mDeferredFBO.getTexture(1).bind(1); // bind normal tex
+		mDeferredFBO.getTexture(2).bind(2); // bind position, normal and color textures from deferred shading pass
+		mDeferredFBO.getTexture(3).bind(3); // bind attr tex
+		mLightShader.uniform("colorMap", 0);
+		mLightShader.uniform("normalMap", 1);
+		mLightShader.uniform("positionMap", 2);
+		mLightShader.uniform("attrMap", 3);
+		
+		mLightShader.uniform("camPosition", mCamera->getCamera().getEyePoint());
+		
 		// render proxy shapes
-        for (PointLight* light : mLights) {
+		for (PointLight* light : mLights) {
 			float distance = light->getAOEDistance();
 			mLightShader.uniform("lightPos", mCamera->getCamera().getModelViewMatrix().transformPointAffine(light->getPosition()));
 			mLightShader.uniform("lightCol", light->getColor());
 			mLightShader.uniform("dist", distance);
 			gl::drawCube(light->getPosition(), Vec3f(distance, distance, distance));
-        }
-        
-        mLightShader.unbind();
-        mDeferredFBO.getTexture(2).unbind(0);
-        mDeferredFBO.getTexture(1).unbind(1);
-        mDeferredFBO.getTexture(0).unbind(2);
-        mDeferredFBO.getTexture(3).unbind(3);
-        
-        glDisable(GL_CULL_FACE);
-        glEnable(GL_DEPTH_TEST);
-        glDepthMask(true);
-        glDisable(GL_BLEND);
-    }
+		}
+		
+		mLightShader.unbind();
+		mDeferredFBO.getTexture(0).unbind(0);
+		mDeferredFBO.getTexture(1).unbind(1);
+		mDeferredFBO.getTexture(2).unbind(2);
+		mDeferredFBO.getTexture(3).unbind(3);
+		
+		glDisable(GL_CULL_FACE);
+		glEnable(GL_DEPTH_TEST);
+		glDepthMask(GL_TRUE);
+		glDisable(GL_BLEND);
+
+		mLightFBO.unbindFramebuffer();
+	}
+    
+	void renderSSAOToFBO() {
+		//render out main scene to FBO
+		mSSAOFBO.bindFramebuffer();
+		gl::setViewport(mSSAOFBO.getBounds());
+		gl::setMatricesWindow((float)mSSAOFBO.getWidth(), (float)mSSAOFBO.getHeight());
+		
+		glClearColor(0.5f, 0.5f, 0.5f, 1);
+		glClearDepth(1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		mRandomNoise.bind(0);
+		mDeferredFBO.getTexture(1).bind(1);
+		mSSAOShader.bind();
+		mSSAOShader.uniform("rnm", 0);
+		mSSAOShader.uniform("normalMap", 1);
+		
+		gl::drawSolidRect(Rectf(0, 0, mSSAOFBO.getWidth(), mSSAOFBO.getHeight()));
+		
+		mSSAOShader.unbind();
+		
+		mDeferredFBO.getTexture(1).unbind(1);
+		mRandomNoise.unbind(0);
+		
+		mSSAOFBO.unbindFramebuffer();
+	}
+
+	void renderPingPongBlurToFBO() {
+		//--------- render horizontal blur first --------------
+		mHBlurFBO.bindFramebuffer();
+		gl::setMatricesWindow((float)mHBlurFBO.getWidth(), (float)mHBlurFBO.getHeight());
+		gl::setViewport(mHBlurFBO.getBounds());
+		glClearColor(0.5f, 0.5f, 0.5f, 1);
+		glClearDepth(1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		mSSAOFBO.getTexture().bind(0);
+		mHBlurShader.bind();
+		mHBlurShader.uniform("tex", 0);
+		mHBlurShader.uniform("blurStep", 1.0f / mHBlurFBO.getWidth());
+		gl::drawSolidRect(Rectf(0, 0, mHBlurFBO.getWidth(), mHBlurFBO.getHeight()));
+		mHBlurShader.unbind();
+		mSSAOFBO.getTexture().unbind(0);
+		mHBlurFBO.unbindFramebuffer();
+		
+		//--------- now render vertical blur --------------
+		mVBlurFBO.bindFramebuffer();
+		gl::setViewport(mVBlurFBO.getBounds());
+		gl::setMatricesWindow((float)mVBlurFBO.getWidth(), (float)mVBlurFBO.getHeight());
+		glClearColor(0.5f, 0.5f, 0.5f, 1);
+		glClearDepth(1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		mHBlurFBO.getTexture().bind(0);
+		mVBlurShader.bind();
+		mVBlurShader.uniform("tex", 0);
+		mVBlurShader.uniform("blurStep", 1.0f / mVBlurFBO.getHeight());
+		gl::drawSolidRect(Rectf(0, 0, mVBlurFBO.getWidth(), mVBlurFBO.getHeight()));
+		mVBlurShader.unbind();
+		mHBlurFBO.getTexture().unbind(0);
+		mVBlurFBO.unbindFramebuffer();
+	}
 	
 	void renderLightGeometry() {
 		for (PointLight* light : mLights) {
