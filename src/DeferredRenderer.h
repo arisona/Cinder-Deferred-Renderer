@@ -58,67 +58,67 @@ private:
 	std::vector<PointLight*> mLights;
 
 public:
-    enum RenderMode {
-        SHOW_FINAL_VIEW,
-        SHOW_DIFFUSE_VIEW,
-        SHOW_NORMALMAP_VIEW,
-        SHOW_DEPTH_VIEW,
-        SHOW_POSITION_VIEW,
-        SHOW_ATTRIBUTE_VIEW,
-        SHOW_SSAO_VIEW,
-        SHOW_SSAO_BLURRED_VIEW,
-        SHOW_LIGHT_VIEW,
-        SHOW_SHADOWS_VIEW
-    };
-    
+	enum RenderMode {
+		SHOW_FINAL_VIEW,
+		SHOW_DIFFUSE_VIEW,
+		SHOW_NORMALMAP_VIEW,
+		SHOW_DEPTH_VIEW,
+		SHOW_POSITION_VIEW,
+		SHOW_ATTRIBUTE_VIEW,
+		SHOW_SSAO_VIEW,
+		SHOW_SSAO_BLURRED_VIEW,
+		SHOW_LIGHT_VIEW,
+		SHOW_SHADOWS_VIEW
+	};
+	
 public:
-    DeferredRenderer() {};
-    ~DeferredRenderer() {};
-    
-    void setup(const std::function<void(gl::GlslProg*)> renderShadowCastersFunc,
-               const std::function<void(gl::GlslProg*)> renderNonShadowCastersFunc,
-               MayaCamUI* camera,
-               Vec2i FBOResolution = Vec2i(512, 512),
-               int shadowMapResolution = 512) {
-        mRenderShadowCastersFunc = renderShadowCastersFunc;
-        mRenderNonShadowCastersFunc = renderNonShadowCastersFunc;
-        mCamera = camera;
-        mFBOResolution = FBOResolution;
-        mShadowMapResolution = shadowMapResolution;
-        
-        glClearDepth(1.0f);
-        glDisable(GL_CULL_FACE);
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LEQUAL);
-        glShadeModel(GL_SMOOTH);
-        glDisable(GL_LIGHTING);
-        glClearColor(0, 0, 0, 0);
-        glColor4d(1, 1, 1, 1);
-        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glEnable(GL_TEXTURE_2D);
-        
-        // init shadow cube: axial matrices required for six-sides of calculations for cube shadows
-        CameraPersp cubeCam;
-        cubeCam.lookAt(Vec3f(0, 0, 0),  Vec3f(1, 0, 0),  Vec3f(0, -1, 0));
-        mLightFaceViewMatrices[CubeShadowMap::X_FACE_POS] = cubeCam.getModelViewMatrix();
+	DeferredRenderer() {};
+	~DeferredRenderer() {};
+	
+	void setup(const std::function<void(gl::GlslProg*)> renderShadowCastersFunc,
+			   const std::function<void(gl::GlslProg*)> renderNonShadowCastersFunc,
+			   MayaCamUI* camera,
+			   Vec2i FBOResolution = Vec2i(512, 512),
+			   int shadowMapResolution = 512) {
+		mRenderShadowCastersFunc = renderShadowCastersFunc;
+		mRenderNonShadowCastersFunc = renderNonShadowCastersFunc;
+		mCamera = camera;
+		mFBOResolution = FBOResolution;
+		mShadowMapResolution = shadowMapResolution;
 		
-        cubeCam.lookAt(Vec3f(0, 0, 0), Vec3f(-1, 0, 0),  Vec3f(0, -1, 0));
-        mLightFaceViewMatrices[CubeShadowMap::X_FACE_NEG] = cubeCam.getModelViewMatrix();
+		glClearDepth(1.0f);
+		glDisable(GL_CULL_FACE);
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LEQUAL);
+		glShadeModel(GL_SMOOTH);
+		glDisable(GL_LIGHTING);
+		glClearColor(0, 0, 0, 0);
+		glColor4d(1, 1, 1, 1);
+		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glEnable(GL_TEXTURE_2D);
 		
-        cubeCam.lookAt(Vec3f(0, 0, 0),  Vec3f(0, 1, 0), Vec3f(0, 0, 1));
-        mLightFaceViewMatrices[CubeShadowMap::Y_FACE_POS] = cubeCam.getModelViewMatrix();
+		// init shadow cube: axial matrices required for six-sides of calculations for cube shadows
+		CameraPersp cubeCam;
+		cubeCam.lookAt(Vec3f(0, 0, 0),  Vec3f(1, 0, 0),  Vec3f(0, -1, 0));
+		mLightFaceViewMatrices[CubeShadowMap::X_FACE_POS] = cubeCam.getModelViewMatrix();
 		
-        cubeCam.lookAt(Vec3f(0, 0, 0),  Vec3f(0.0,-1.0, 0.0),  Vec3f(0.0, 0.0,-1.0));
-        mLightFaceViewMatrices[CubeShadowMap::Y_FACE_NEG] = cubeCam.getModelViewMatrix();
+		cubeCam.lookAt(Vec3f(0, 0, 0), Vec3f(-1, 0, 0),  Vec3f(0, -1, 0));
+		mLightFaceViewMatrices[CubeShadowMap::X_FACE_NEG] = cubeCam.getModelViewMatrix();
 		
-        cubeCam.lookAt(Vec3f(0, 0, 0),  Vec3f(0, 0, 1),  Vec3f(0, -1, 0));
-        mLightFaceViewMatrices[CubeShadowMap::Z_FACE_POS] = cubeCam.getModelViewMatrix();
+		cubeCam.lookAt(Vec3f(0, 0, 0),  Vec3f(0, 1, 0), Vec3f(0, 0, 1));
+		mLightFaceViewMatrices[CubeShadowMap::Y_FACE_POS] = cubeCam.getModelViewMatrix();
 		
-        cubeCam.lookAt(Vec3f(0, 0, 0),  Vec3f(0, 0, -1),  Vec3f(0, -1, 0));
-        mLightFaceViewMatrices[CubeShadowMap::Z_FACE_NEG] = cubeCam.getModelViewMatrix();
+		cubeCam.lookAt(Vec3f(0, 0, 0),  Vec3f(0.0,-1.0, 0.0),  Vec3f(0.0, 0.0,-1.0));
+		mLightFaceViewMatrices[CubeShadowMap::Y_FACE_NEG] = cubeCam.getModelViewMatrix();
+		
+		cubeCam.lookAt(Vec3f(0, 0, 0),  Vec3f(0, 0, 1),  Vec3f(0, -1, 0));
+		mLightFaceViewMatrices[CubeShadowMap::Z_FACE_POS] = cubeCam.getModelViewMatrix();
+		
+		cubeCam.lookAt(Vec3f(0, 0, 0),  Vec3f(0, 0, -1),  Vec3f(0, -1, 0));
+		mLightFaceViewMatrices[CubeShadowMap::Z_FACE_NEG] = cubeCam.getModelViewMatrix();
 
-        // init textures
+		// init textures
 		mRandomNoise = gl::Texture(loadImage(loadResource(NOISE_SAMPLER))); //noise texture required for SSAO calculations
 		
 		// init shaders
@@ -168,33 +168,33 @@ public:
 		
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    }
-    
-    void render(RenderMode renderMode, bool enableShadows, bool enableSSAO) {
+	}
+	
+	void render(RenderMode renderMode, bool enableShadows, bool enableSSAO) {
 		// 1. render main scene to FBO
 		
-        glClearColor(0.5f, 0.5f, 0.5f, 1);
-        glClearDepth(1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        gl::setMatrices(mCamera->getCamera());
-        renderSceneToDeferredFBO();
-        
+		glClearColor(0.5f, 0.5f, 0.5f, 1);
+		glClearDepth(1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		gl::setMatrices(mCamera->getCamera());
+		renderSceneToDeferredFBO();
+		
 		// 2. create shadow maps and render shadows to FBOs
 		
 		if (enableShadows) renderShadowsToFBOs();
-        
+		
 		// 3. render lights & ssao to FBO
 		
-        gl::setMatrices(mCamera->getCamera());
-        renderLightsToFBO();
-        renderSSAOToFBO();
+		gl::setMatrices(mCamera->getCamera());
+		renderLightsToFBO();
+		renderSSAOToFBO();
 		
-        // 4. final deferred rendering, depending on current mode
+		// 4. final deferred rendering, depending on current mode
 		
-        switch (renderMode) {
-            case SHOW_FINAL_VIEW: // key 0
-                renderPingPongBlurToFBO();
+		switch (renderMode) {
+			case SHOW_FINAL_VIEW: // key 0
+				renderPingPongBlurToFBO();
 				
 				mFinalFBO.bindFramebuffer();
 				glClearColor(0.5f, 0.5f, 0.5f, 1);
@@ -220,8 +220,8 @@ public:
 				mLightFBO.getTexture().unbind(2);
 				mFinalFBO.unbindFramebuffer();
 
-                gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize());
+				gl::setViewport(getWindowBounds());
+				gl::setMatricesWindow(getWindowSize());
 				
 				mFinalFBO.getTexture().bind(0);
 				mFXAAShader.bind();
@@ -230,94 +230,94 @@ public:
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
 				mFXAAShader.unbind();
 				mFinalFBO.getTexture().unbind(0);
-                break;
+				break;
 				
-            case SHOW_DIFFUSE_VIEW: // key 1
-                gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize(), false);
-                mDeferredFBO.getTexture(0).bind(0);
+			case SHOW_DIFFUSE_VIEW: // key 1
+				gl::setViewport(getWindowBounds());
+				gl::setMatricesWindow(getWindowSize(), false);
+				mDeferredFBO.getTexture(0).bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
-                mDeferredFBO.getTexture(0).unbind(0);
-                break;
+				mDeferredFBO.getTexture(0).unbind(0);
+				break;
 				
-            case SHOW_NORMALMAP_VIEW: // key 2
-                gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize(), false);
-                mDeferredFBO.getTexture(1).bind(0);
+			case SHOW_NORMALMAP_VIEW: // key 2
+				gl::setViewport(getWindowBounds());
+				gl::setMatricesWindow(getWindowSize(), false);
+				mDeferredFBO.getTexture(1).bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
-                mDeferredFBO.getTexture(1).unbind(0);
-                break;
+				mDeferredFBO.getTexture(1).unbind(0);
+				break;
 				
-            case SHOW_DEPTH_VIEW: // key 3
-                gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize(), false);
-                mDeferredFBO.getTexture(1).bind(0);
-                mAlphaToRBGShader.bind();
-                mAlphaToRBGShader.uniform("tex", 0);
+			case SHOW_DEPTH_VIEW: // key 3
+				gl::setViewport(getWindowBounds());
+				gl::setMatricesWindow(getWindowSize(), false);
+				mDeferredFBO.getTexture(1).bind(0);
+				mAlphaToRBGShader.bind();
+				mAlphaToRBGShader.uniform("tex", 0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
-                mAlphaToRBGShader.unbind();
-                mDeferredFBO.getTexture(1).unbind(0);
-                break;
+				mAlphaToRBGShader.unbind();
+				mDeferredFBO.getTexture(1).unbind(0);
+				break;
 				
-            case SHOW_POSITION_VIEW: // key 4
-                gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize(), false);
-                mDeferredFBO.getTexture(2).bind(0);
+			case SHOW_POSITION_VIEW: // key 4
+				gl::setViewport(getWindowBounds());
+				gl::setMatricesWindow(getWindowSize(), false);
+				mDeferredFBO.getTexture(2).bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
-                mDeferredFBO.getTexture(2).unbind(0);
-                break;
+				mDeferredFBO.getTexture(2).unbind(0);
+				break;
 				
-            case SHOW_ATTRIBUTE_VIEW: // key 5
-                gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize(), false);
-                mDeferredFBO.getTexture(3).bind(0);
+			case SHOW_ATTRIBUTE_VIEW: // key 5
+				gl::setViewport(getWindowBounds());
+				gl::setMatricesWindow(getWindowSize(), false);
+				mDeferredFBO.getTexture(3).bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
-                mDeferredFBO.getTexture(3).unbind(0);
-                break;
-                
-            case SHOW_SSAO_VIEW: // key 6
-                gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize(), false);
-                mSSAOFBO.getTexture().bind(0);
-				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
-                mSSAOFBO.getTexture().unbind(0);
-                break;
+				mDeferredFBO.getTexture(3).unbind(0);
+				break;
 				
-            case SHOW_SSAO_BLURRED_VIEW: // key 7
-                renderPingPongBlurToFBO();
-                gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize(), false);
-                mVBlurFBO.getTexture().bind(0);
+			case SHOW_SSAO_VIEW: // key 6
+				gl::setViewport(getWindowBounds());
+				gl::setMatricesWindow(getWindowSize(), false);
+				mSSAOFBO.getTexture().bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
-                mVBlurFBO.getTexture().unbind(0);
-                break;
+				mSSAOFBO.getTexture().unbind(0);
+				break;
 				
-            case SHOW_LIGHT_VIEW: // key 8
-                gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize(), false);
-                mLightFBO.getTexture().bind(0);
+			case SHOW_SSAO_BLURRED_VIEW: // key 7
+				renderPingPongBlurToFBO();
+				gl::setViewport(getWindowBounds());
+				gl::setMatricesWindow(getWindowSize(), false);
+				mVBlurFBO.getTexture().bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
-                mLightFBO.getTexture().unbind(0);
-                break;
+				mVBlurFBO.getTexture().unbind(0);
+				break;
 				
-            case SHOW_SHADOWS_VIEW: // key 9
-                gl::setViewport(getWindowBounds());
-                gl::setMatricesWindow(getWindowSize(), false);
-                mShadowFBO.getTexture().bind(0);
+			case SHOW_LIGHT_VIEW: // key 8
+				gl::setViewport(getWindowBounds());
+				gl::setMatricesWindow(getWindowSize(), false);
+				mLightFBO.getTexture().bind(0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
-                mShadowFBO.getTexture().unbind(0);
-                break;
-        }
-    }
+				mLightFBO.getTexture().unbind(0);
+				break;
+				
+			case SHOW_SHADOWS_VIEW: // key 9
+				gl::setViewport(getWindowBounds());
+				gl::setMatricesWindow(getWindowSize(), false);
+				mShadowFBO.getTexture().bind(0);
+				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
+				mShadowFBO.getTexture().unbind(0);
+				break;
+		}
+	}
 
-    std::vector<PointLight*>& getLights() {
+	std::vector<PointLight*>& getLights() {
 		return mLights;
 	};
 	
-    void addLight(const Vec3f position, const Color color, const bool castsShadows = false, const bool visible = true) {
-        mLights.push_back(new PointLight(position, color, mShadowMapResolution, castsShadows, visible));
-    }
-    
+	void addLight(const Vec3f position, const Color color, const bool castsShadows = false, const bool visible = true) {
+		mLights.push_back(new PointLight(position, color, mShadowMapResolution, castsShadows, visible));
+	}
+	
 private:
 	void renderSceneToDeferredFBO() {
 		mDeferredFBO.bindFramebuffer();
@@ -351,102 +351,103 @@ private:
 		mDeferredFBO.unbindFramebuffer();
 	}
 
-    void renderShadowsToFBOs() {
+	void renderShadowsToFBOs() {
 		if (!mRenderShadowCastersFunc)
-			return
-			glEnable(GL_CULL_FACE);
+			return;
 
-        // create shadow maps
+		glEnable(GL_CULL_FACE);
+
+		// create shadow maps
 		for (PointLight* light : mLights) {
-            if (!light->isShadowCaster())
+			if (!light->isShadowCaster())
 				continue;
-            
-            light->mCubeDepthFbo.bindFramebuffer();
-            glDrawBuffer(GL_NONE);
-            glReadBuffer(GL_NONE);
-            glViewport(0, 0, mShadowMapResolution, mShadowMapResolution);
-            
-            glCullFace(GL_FRONT);
-            
-            glMatrixMode(GL_PROJECTION);
-            glLoadMatrixf(light->mShadowCam.getProjectionMatrix());
-            glMatrixMode(GL_MODELVIEW);
-            
-            for (size_t i = 0; i < 6; ++i) {
-                light->mShadowMap.bindDepthFramebuffer(i);
-                glClear(GL_DEPTH_BUFFER_BIT);
-                
-                glLoadMatrixf(mLightFaceViewMatrices[i]);
-                glMultMatrixf(light->mShadowCam.getModelViewMatrix());
+			
+			light->mCubeDepthFbo.bindFramebuffer();
+			glDrawBuffer(GL_NONE);
+			glReadBuffer(GL_NONE);
+			glViewport(0, 0, mShadowMapResolution, mShadowMapResolution);
+			
+			glCullFace(GL_FRONT);
+			
+			glMatrixMode(GL_PROJECTION);
+			glLoadMatrixf(light->mShadowCam.getProjectionMatrix());
+			glMatrixMode(GL_MODELVIEW);
+			
+			for (size_t i = 0; i < 6; ++i) {
+				light->mShadowMap.bindDepthFramebuffer(i);
+				glClear(GL_DEPTH_BUFFER_BIT);
+				
+				glLoadMatrixf(mLightFaceViewMatrices[i]);
+				glMultMatrixf(light->mShadowCam.getModelViewMatrix());
 				mRenderShadowCastersFunc(0);
-            }
-            
-            light->mCubeDepthFbo.unbindFramebuffer();
+			}
+			
+			light->mCubeDepthFbo.unbindFramebuffer();
 		}
 
 		// render each shadow layer
 		for (PointLight* light : mLights) {
-            if (!light->isShadowCaster())
+			if (!light->isShadowCaster())
 				continue;
-            
-            light->mShadowFBO.bindFramebuffer();
-            
-            glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-            //glDrawBuffer(GL_BACK);
-            //glReadBuffer(GL_BACK);
-            gl::setViewport(light->mShadowFBO.getBounds());
-            
-            glCullFace(GL_BACK); //don't need what we won't see
-            
-            gl::setMatrices(mCamera->getCamera());
-            
-            mCubeShadowShader.bind();
 			
-            light->mShadowMap.bind(); //the magic texture
-            mCubeShadowShader.uniform("shadow", 0);
-            
+			light->mShadowFBO.bindFramebuffer();
+			
+			glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+			//glDrawBuffer(GL_BACK);
+			//glReadBuffer(GL_BACK);
+			gl::setViewport(light->mShadowFBO.getBounds());
+			
+			glCullFace(GL_BACK); //don't need what we won't see
+			
+			gl::setMatrices(mCamera->getCamera());
+			
+			mCubeShadowShader.bind();
+			
+			light->mShadowMap.bind(); //the magic texture
+			mCubeShadowShader.uniform("shadow", 0);
+			
 			//conversion from world-space to camera-space (required here)
-            mCubeShadowShader.uniform("light_position", mCamera->getCamera().getModelViewMatrix().transformPointAffine(light->mShadowCam.getEyePoint()));
-            mCubeShadowShader.uniform("camera_view_matrix_inv", mCamera->getCamera().getInverseModelViewMatrix());
-            mCubeShadowShader.uniform("light_view_matrix", light->mShadowCam.getModelViewMatrix());
-            mCubeShadowShader.uniform("light_projection_matrix", light->mShadowCam.getProjectionMatrix());
-            
+			mCubeShadowShader.uniform("light_position", mCamera->getCamera().getModelViewMatrix().transformPointAffine(light->mShadowCam.getEyePoint()));
+			mCubeShadowShader.uniform("camera_view_matrix_inv", mCamera->getCamera().getInverseModelViewMatrix());
+			mCubeShadowShader.uniform("light_view_matrix", light->mShadowCam.getModelViewMatrix());
+			mCubeShadowShader.uniform("light_projection_matrix", light->mShadowCam.getProjectionMatrix());
+			
 			renderLightGeometry();
 			if (mRenderShadowCastersFunc) { mRenderShadowCastersFunc(nullptr); }
 			if (mRenderNonShadowCastersFunc) { mRenderNonShadowCastersFunc(nullptr); }
-            
-            light->mShadowMap.unbind();
-            glDisable(GL_TEXTURE_CUBE_MAP);
-            
-            mCubeShadowShader.unbind();
-            
-            light->mShadowFBO.unbindFramebuffer();
-        }
-        glDisable(GL_CULL_FACE);
-        
-        // render all shadow layers to one FBO
-        mShadowFBO.bindFramebuffer();
-        gl::setViewport(mShadowFBO.getBounds());
-        gl::setMatricesWindow((float)mShadowFBO.getWidth(), (float)mShadowFBO.getHeight());
-        glClearColor(0.5f, 0.5f, 0.5f, 0.0);
-        glClearDepth(1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        gl::enableAlphaBlending();
-        
+			
+			light->mShadowMap.unbind();
+			glDisable(GL_TEXTURE_CUBE_MAP);
+			
+			mCubeShadowShader.unbind();
+			
+			light->mShadowFBO.unbindFramebuffer();
+		}
+		glDisable(GL_CULL_FACE);
+		
+		// render all shadow layers to one FBO
+		mShadowFBO.bindFramebuffer();
+		gl::setViewport(mShadowFBO.getBounds());
+		gl::setMatricesWindow((float)mShadowFBO.getWidth(), (float)mShadowFBO.getHeight(), false);
+		glClearColor(0.5f, 0.5f, 0.5f, 0.0);
+		glClearDepth(1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		gl::enableAlphaBlending();
+
 		for (PointLight* light : mLights) {
-            if (!light->isShadowCaster())
+			if (!light->isShadowCaster())
 				continue;
-            
-            light->mShadowFBO.getTexture().bind();
-			//this is different as we are not using shaders to color these quads (need to fit viewport)
-            gl::drawSolidRect(Rectf(0, (float)mShadowFBO.getHeight(), (float)mShadowFBO.getWidth(), 0));
-            light->mShadowFBO.getTexture().unbind();
-        }
-        gl::disableAlphaBlending();
-        mShadowFBO.unbindFramebuffer();
-    }
-    
+			
+			light->mShadowFBO.getTexture().bind();
+			gl::drawSolidRect(Rectf(0, 0, mShadowFBO.getWidth(), mShadowFBO.getHeight()));
+			light->mShadowFBO.getTexture().unbind();
+		}
+		
+		gl::disableAlphaBlending();
+		mShadowFBO.unbindFramebuffer();
+	}
+	
 	void renderLightsToFBO() {
 		mLightFBO.bindFramebuffer();
 		gl::setViewport(mLightFBO.getBounds());
@@ -496,7 +497,7 @@ private:
 
 		mLightFBO.unbindFramebuffer();
 	}
-    
+	
 	void renderSSAOToFBO() {
 		//render out main scene to FBO
 		mSSAOFBO.bindFramebuffer();

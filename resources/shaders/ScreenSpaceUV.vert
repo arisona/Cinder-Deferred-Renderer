@@ -8,5 +8,5 @@ void main(void) {
     //gl_FrontColor = gl_Color;
 	
 	// texture coordinate for screen aligned (in correct range):
-	uv = (vec2(gl_Position.x, gl_Position.y) + vec2(1.0)) * 0.5;
+	uv = gl_Position.xy * 0.5 + 0.5;
 }

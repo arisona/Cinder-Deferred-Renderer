@@ -13,6 +13,8 @@ uniform float dist;
 
 varying vec4 pos;
 
+// XXX couldn't we pass uv from vert shader, as with others?
+
 void main(void) {
 	vec2 coord = pos.xy / pos.w * 0.5 + 0.5;
 	vec4 p = texture2D(positionMap, coord);			// get the position from deferred shading
@@ -29,6 +31,7 @@ void main(void) {
 	float phong_coeff = attr.g;
 	float two_sided = attr.b;
 	float cost = dot(norm.xyz, VP);
+	// XXX we need something like this... if (cost < 0) discard;
 	cost = (cost < 0.0) ? -two_sided * cost : cost;	// calculate two sided lighting.
 	float diff = diff_coeff * cost;					// calculate diffuse shading
 	vec3 H = normalize(VP + normalize(camPos - p.xyz));				// calculate half vector
