@@ -153,6 +153,7 @@ void CinderDeferredRenderingApp::setup() {
     // have these point lights cast shadows
     mRenderer.addLight(Vec3f(-2.0f, 4.0f, 6.0f), Color(0.10f, 0.69f, 0.93f), true);
     mRenderer.addLight(Vec3f(4.0f, 6.0f, -4.0f), Color(0.94f, 0.15f, 0.23f), true);
+    mRenderer.addLight(Vec3f(-6.0f, 8.0f, -4.0f), Color(0.14f, 0.95f, 0.23f), true);
     
     // add a bunch of lights that don't cast shadows
     for (int i = 0; i < NUM_LIGHTS; ++i) {

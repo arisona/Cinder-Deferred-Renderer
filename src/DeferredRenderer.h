@@ -395,7 +395,7 @@ private:
 			glCullFace(GL_FRONT);
 			
 			glMatrixMode(GL_PROJECTION);
-			glLoadMatrixf(light->mShadowCam.getProjectionMatrix());
+			glLoadMatrixf(light->getCamera().getProjectionMatrix());
 			glMatrixMode(GL_MODELVIEW);
 			
 			for (size_t i = 0; i < 6; ++i) {
@@ -403,7 +403,7 @@ private:
 				glClear(GL_DEPTH_BUFFER_BIT);
 				
 				glLoadMatrixf(mLightFaceViewMatrices[i]);
-				glMultMatrixf(light->mShadowCam.getModelViewMatrix());
+				glMultMatrixf(light->getCamera().getModelViewMatrix());
 				mRenderShadowCastersFunc(0);
 				mCubeShadowMap.unbindDepthFramebuffer(i);
 			}
@@ -425,10 +425,10 @@ private:
 			
 			// conversion from world-space to camera-space (required here)
 			mCubeShadowShader.uniform("light_position",
-									  mCamera->getCamera().getModelViewMatrix().transformPointAffine(light->mShadowCam.getEyePoint()));
+									  mCamera->getCamera().getModelViewMatrix().transformPointAffine(light->getCamera().getEyePoint()));
 			mCubeShadowShader.uniform("camera_view_matrix_inv", mCamera->getCamera().getInverseModelViewMatrix());
-			mCubeShadowShader.uniform("light_view_matrix", light->mShadowCam.getModelViewMatrix());
-			mCubeShadowShader.uniform("light_projection_matrix", light->mShadowCam.getProjectionMatrix());
+			mCubeShadowShader.uniform("light_view_matrix", light->getCamera().getModelViewMatrix());
+			mCubeShadowShader.uniform("light_projection_matrix", light->getCamera().getProjectionMatrix());
 			
 			renderLightGeometry();
 			if (mRenderShadowCastersFunc) { mRenderShadowCastersFunc(nullptr); }

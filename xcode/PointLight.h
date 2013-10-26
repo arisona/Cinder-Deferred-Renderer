@@ -9,15 +9,14 @@ public:
 private:
 	static constexpr float LIGHT_CUTOFF_DEFAULT = 0.01f;
 
-    Vec3f mPosition;
-    Color mColor;
-    float mRadius;
+	Vec3f mPosition;
+	Color mColor;
+	float mRadius;
 	float mBrightness;
 	bool mCastShadows;
-    bool mVisible;
-    
-public:
-    CameraPersp mShadowCam;
+	bool mVisible;
+
+	CameraPersp mShadowCam;
     
 public:
 	PointLight(Vec3f position, Color color, float brightness, bool castShadows = false, bool visible = true) {
@@ -66,5 +65,9 @@ public:
 
     bool isShadowCaster() const {
 		return mCastShadows;
+	}
+	
+	const CameraPersp& getCamera() const {
+		return mShadowCam;
 	}
 };
