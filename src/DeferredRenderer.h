@@ -358,7 +358,7 @@ private:
 		glEnable(GL_CULL_FACE);
 
 		// create shadow maps
-		for (PointLight* light : mLights) {
+		for (auto light : mLights) {
 			if (!light->isShadowCaster())
 				continue;
 			
@@ -386,7 +386,7 @@ private:
 		}
 
 		// render each shadow layer
-		for (PointLight* light : mLights) {
+		for (auto light : mLights) {
 			if (!light->isShadowCaster())
 				continue;
 			
@@ -435,7 +435,7 @@ private:
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		gl::enableAlphaBlending();
 
-		for (PointLight* light : mLights) {
+		for (auto light : mLights) {
 			if (!light->isShadowCaster())
 				continue;
 			
@@ -471,17 +471,17 @@ private:
 		mLightShader.uniform("colorMap", 0);
 		mLightShader.uniform("normalMap", 1);
 		mLightShader.uniform("positionMap", 2);
-		mLightShader.uniform("attrMap", 3);
+		mLightShader.uniform("attributeMap", 3);
 		
-		mLightShader.uniform("camPosition", mCamera->getCamera().getEyePoint());
+		mLightShader.uniform("cameraPosition", mCamera->getCamera().getEyePoint());
 		
 		// render proxy shapes
 		for (PointLight* light : mLights) {
-			float distance = light->getAOEDistance();
-			mLightShader.uniform("lightPos", mCamera->getCamera().getModelViewMatrix().transformPointAffine(light->getPosition()));
-			mLightShader.uniform("lightCol", light->getColor());
-			mLightShader.uniform("dist", distance);
-			gl::drawCube(light->getPosition(), Vec3f(distance, distance, distance));
+			float radius = light->getRadius();
+			mLightShader.uniform("lightPosition", mCamera->getCamera().getModelViewMatrix().transformPointAffine(light->getPosition()));
+			mLightShader.uniform("lightColor", light->getColor() * light->getBrightness());
+			mLightShader.uniform("dist", radius);
+			gl::drawCube(light->getPosition(), Vec3f(radius, radius, radius));
 		}
 		
 		mLightShader.unbind();

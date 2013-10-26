@@ -1,9 +1,10 @@
 #version 120
 
+uniform float dist;
+
 varying vec4 pos;
 
 void main(void) {
-	vec4 p = ftransform();
-	gl_Position = p;
-	pos = p;
+	gl_Position = ftransform();
+	pos = gl_Position;
 }

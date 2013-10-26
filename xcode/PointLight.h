@@ -3,14 +3,13 @@
 using namespace ci;
 
 class PointLight {
-	const float LIGHT_CUTOFF_DEFAULT = 0.001f;
+	const float LIGHT_CUTOFF_DEFAULT = 0.01f;
+	const float LIGHT_BRIGHTNESS_DEFAULT = 100.0f;
 
 private:
     Vec3f mPosition;
     Color mColor;
-    float mAOEDist; // AOE = area of effect
-    int mShadowMapRes;
-    bool mCastShadows;
+    float mRadius; // AOE = area of effect
     bool mVisible;
     
 public:
@@ -22,19 +21,16 @@ public:
 public:
 	PointLight(Vec3f position, Color color, int shadowMapRes, bool castShadows = false, bool visible = true) {
         mPosition = position;
-        mColor = color;
-        mAOEDist = sqrt(color.length() / LIGHT_CUTOFF_DEFAULT);
-        mShadowMapRes = shadowMapRes;
-        mCastShadows = castShadows;
+		setColor(color);
         mVisible = visible;
         
         //set up fake "light" to grab matrix calculations from
         mShadowCam.setPerspective(90.0f, 1.0f, 1.0f, 100.0f);
         mShadowCam.lookAt(position, Vec3f(position.x, 0, position.z));
         
-        if (mCastShadows) {
+        if (castShadows) {
 			// set up cube map for point shadows
-			mShadowMap.setup(mShadowMapRes);
+			mShadowMap.setup(shadowMapRes);
 			
 			// create FBO to hold depth values from cube map
 			gl::Fbo::Format formatShadow;
@@ -43,13 +39,13 @@ public:
 			formatShadow.setMinFilter(GL_LINEAR);
 			formatShadow.setMagFilter(GL_LINEAR);
 			formatShadow.setWrap(GL_CLAMP, GL_CLAMP);
-			mCubeDepthFbo = gl::Fbo(mShadowMapRes, mShadowMapRes, formatShadow);
+			mCubeDepthFbo = gl::Fbo(shadowMapRes, shadowMapRes, formatShadow);
 			
 			gl::Fbo::Format format;
 			// format.setDepthInternalFormat(GL_DEPTH_COMPONENT32);
 			format.setColorInternalFormat(GL_RGBA16F_ARB);
 			// format.setSamples(4); // enable 4x antialiasing
-			mShadowFBO	= gl::Fbo(mShadowMapRes, mShadowMapRes, format);
+			mShadowFBO	= gl::Fbo(shadowMapRes, shadowMapRes, format);
 		}
     }
     
@@ -62,17 +58,21 @@ public:
         return mPosition;
     }
     
-	void setColor(const Color color) {
+	void setColor(const Color& color) {
         mColor = color;
-        mAOEDist = sqrt(color.length() / LIGHT_CUTOFF_DEFAULT);
+        mRadius = sqrt(mColor.length() / LIGHT_CUTOFF_DEFAULT * LIGHT_BRIGHTNESS_DEFAULT);
     }
     
     const Color& getColor() const {
         return mColor;
     }
+	
+	float getBrightness() const {
+		return LIGHT_BRIGHTNESS_DEFAULT;
+	}
     
-    float getAOEDistance() const {
-        return mAOEDist;
+    float getRadius() const {
+        return mRadius;
     }
     
     bool isVisible() const {
@@ -80,6 +80,6 @@ public:
 	}
 
     bool isShadowCaster() const {
-		return mCastShadows;
+		return mShadowFBO;
 	}
 };

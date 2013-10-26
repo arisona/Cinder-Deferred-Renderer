@@ -70,7 +70,6 @@ class CinderDeferredRenderingApp : public AppBasic {
 
 	const Vec3f CAM_POSITION_INIT = Vec3f(-14.0f, 7.0f, -14.0f);
 	const Vec3f LIGHT_POSITION_INIT = Vec3f(3.0f, 1.5f, 0.0f);
-	const float LIGHT_BRIGHTNESS_DEFAULT = 60.0f;
 	
 public:
 
@@ -96,6 +95,8 @@ private:
     float mFramerate = 0;
 	
     DeferredRenderer::RenderMode mRenderMode = DeferredRenderer::SHOW_FINAL_VIEW;
+
+	bool mAnimate = false;
 	bool mShadows = true;
 	bool mSSAO = true;
 	
@@ -123,13 +124,17 @@ void CinderDeferredRenderingApp::prepareSettings(Settings* settings) {
 }
 
 void CinderDeferredRenderingApp::setup() {
-	gl::disableVerticalSync(); //so I can get a true representation of FPS (if higher than 60 anyhow :/)
+	//gl::disableVerticalSync(); //so I can get a true representation of FPS (if higher than 60 anyhow :/)
     
 	mParams = params::InterfaceGl("3D_Scene_Base", Vec2i(225, 125));
 	mParams.addParam("Framerate", &mFramerate, "", true);
-    mParams.addParam("Selected Light Index", &mCurrentLightIndex);
-	mParams.addParam("Show/Hide Params", &mShowParams, "key=x");
+	mParams.addParam("Show/Hide", &mShowParams, "key=x");
+	mParams.addText("RenderMode: 0...9");
 	mParams.addSeparator();
+	mParams.addParam("Ambient Occlusion (SSAO)", &mSSAO, "key=a");
+	mParams.addParam("Shadows", &mShadows, "key=s");
+	mParams.addParam("Disco Mode", &mAnimate, "key=d");
+    mParams.addParam("Selected Light Index", &mCurrentLightIndex);
 
 	// set up camera
     CameraPersp initialCam;
@@ -145,37 +150,34 @@ void CinderDeferredRenderingApp::setup() {
 	mRenderer.setup(shadowCasterFunc, noShadowCasterFunc, &mCamera, Vec2i(APP_RES_HORIZONTAL, APP_RES_VERTICAL), 1024);
     
     // have these point lights cast shadows
-    mRenderer.addLight(Vec3f(-2.0f, 4.0f, 6.0f), Color(0.10f, 0.69f, 0.93f) * LIGHT_BRIGHTNESS_DEFAULT, true);
-    mRenderer.addLight(Vec3f(4.0f, 6.0f, -4.0f), Color(0.94f, 0.15f, 0.23f) * LIGHT_BRIGHTNESS_DEFAULT, true);
+    mRenderer.addLight(Vec3f(-2.0f, 4.0f, 6.0f), Color(0.10f, 0.69f, 0.93f), true);
+    mRenderer.addLight(Vec3f(4.0f, 6.0f, -4.0f), Color(0.94f, 0.15f, 0.23f), true);
     
     // add a bunch of lights that don't cast shadows
     for (int i = 0; i < NUM_LIGHTS; ++i) {
-        int randColIndex = Rand::randInt(5);
-        Color randCol;
-        switch (randColIndex) {
+        int colorIndex = Rand::randInt(5);
+        Color color;
+        switch (colorIndex) {
             case 0:
-                randCol = Color(0.99f, 0.67f, 0.23f); // orange
+                color = Color(0.99f, 0.67f, 0.23f); // orange
                 break;
             case 1:
-                randCol = Color(0.97f, 0.24f, 0.85f); // pink
+                color = Color(0.97f, 0.24f, 0.85f); // pink
                 break;
             case 2:
-                randCol = Color(0.00f, 0.93f, 0.30f); // green
+                color = Color(0.00f, 0.93f, 0.30f); // green
                 break;
             case 3:
-                randCol = Color(0.98f, 0.96f, 0.32f); // yellow
+                color = Color(0.98f, 0.96f, 0.32f); // yellow
                 break;
             case 4:
-                randCol = Color(0.10f, 0.69f, 0.93f); // blue
+                color = Color(0.10f, 0.69f, 0.93f); // blue
                 break;
             case 5:
-                randCol = Color(0.94f, 0.15f, 0.23f); // red
+                color = Color(0.94f, 0.15f, 0.23f); // red
                 break;
         };
-        
-        mRenderer.addLight(Vec3f(Rand::randFloat(-1000, 1000), Rand::randFloat(0, 50), Rand::randFloat(-1000, 1000)),
-						   randCol * LIGHT_BRIGHTNESS_DEFAULT);
-		
+        mRenderer.addLight(Vec3f(Rand::randFloat(-1000, 1000), Rand::randFloat(0, 50), Rand::randFloat(-1000, 1000)), color);
     }
 
 	// load texture for earth sphere (note: will be upside down)
@@ -187,6 +189,15 @@ void CinderDeferredRenderingApp::update() {
 }
 
 void CinderDeferredRenderingApp::draw() {
+	if (mAnimate) {
+		auto lights = mRenderer.getLights();
+		for (int i = 0; i < lights.size(); ++i) {
+			if (lights[i]->isShadowCaster()) continue;
+			Vec3f pos = lights[i]->getPosition();
+			pos.rotateY(0.00001 * i * (i % 2 ? -1 : 1));
+			lights[i]->setPosition(pos);
+		}
+	}
     mRenderer.render(mRenderMode, mShadows, mSSAO);
 	if (mShowParams)
 		mParams.draw();
