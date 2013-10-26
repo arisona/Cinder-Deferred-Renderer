@@ -46,6 +46,7 @@
 		00B784B20FF439BC000DE1D7 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
 		00BAE6590E7ED9C10018A608 /* CinderDeferredRenderingApp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CinderDeferredRenderingApp.cpp; path = ../src/CinderDeferredRenderingApp.cpp; sourceTree = SOURCE_ROOT; };
 		00CCAF14116A9FEE008396D5 /* CinderApp.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = CinderApp.icns; sourceTree = SOURCE_ROOT; };
+		0C16D0B2181BFBED00919DD5 /* PointLight.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PointLight.h; path = ../src/PointLight.h; sourceTree = "<group>"; };
 		0C76FBA5181A06740011F61C /* AlphaToRGB_glsl.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = AlphaToRGB_glsl.frag; sourceTree = "<group>"; };
 		0C76FBA7181A06740011F61C /* BasicBlender_glsl.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = BasicBlender_glsl.frag; sourceTree = "<group>"; };
 		0C76FBA9181A06740011F61C /* Blur_h_glsl.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Blur_h_glsl.frag; sourceTree = "<group>"; };
@@ -61,7 +62,6 @@
 		0C76FBB7181A06740011F61C /* SSAO_glsl.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = SSAO_glsl.frag; sourceTree = "<group>"; };
 		0C76FBB9181A06740011F61C /* random.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = random.png; sourceTree = "<group>"; };
 		0CAEB3491819FB61008CCF3B /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = README.md; path = ../README.md; sourceTree = "<group>"; };
-		0CC4146C181A0AA700B200FC /* PointLight.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; path = PointLight.h; sourceTree = "<group>"; };
 		0CD444D9181A3F9500BC2026 /* ScreenSpaceUV.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = ScreenSpaceUV.vert; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
@@ -220,7 +220,7 @@
 			isa = PBXGroup;
 			children = (
 				DFD06661169255550086C6D6 /* DeferredRenderer.h */,
-				0CC4146C181A0AA700B200FC /* PointLight.h */,
+				0C16D0B2181BFBED00919DD5 /* PointLight.h */,
 				DF970BB31683E35F0076C154 /* CubeShadowMap.h */,
 			);
 			name = DeferredRenderer;

@@ -1,4 +1,4 @@
-Cinder application for deferred rendering experiments (lighing, shadows mapping, SSAO)
+Cinder application for deferred rendering experiments (lighing, shadow mapping, SSAO)
 
 Forked from original code by
 Anthony Scavarelli <anthony.scavarelli@gmail.com> 
@@ -7,7 +7,7 @@ https://github.com/PlumCantaloupe/Cinder-Deferred-Renderer
 
 Thanks to Anthony and the contributors his code is based on.
 
-Original code ported to c++11 and optimized / fixed a couple of things, plus some new features/controls
+Original code ported to c++11 and optimized / fixed a couple of things, plus some new features/controls.
 
 This code is based on a deferred renderer for point lights and screen space ambient occlusion (SSAO), including shadow mapping.
 
