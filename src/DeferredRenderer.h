@@ -315,7 +315,7 @@ public:
 	};
 	
 	void addLight(const Vec3f position, const Color color, const bool castsShadows = false, const bool visible = true) {
-		mLights.push_back(new PointLight(position, color, mShadowMapResolution, castsShadows, visible));
+		mLights.push_back(new PointLight(position, color, PointLight::LIGHT_BRIGHTNESS_DEFAULT, mShadowMapResolution, castsShadows, visible));
 	}
 	
 private:
@@ -339,12 +339,12 @@ private:
 		
 		// render deferred geometry
 		// original values:
-		//mDeferredShader.uniform("diff_coeff", 1.0f);
-		//mDeferredShader.uniform("phong_coeff", 0.0f);
-		//mDeferredShader.uniform("two_sided", 0.8f);
-		mDeferredShader.uniform("diff_coeff", 0.6f);
-		mDeferredShader.uniform("phong_coeff", 0.3f);
-		mDeferredShader.uniform("two_sided", 0.0f);
+		mDeferredShader.uniform("diff_coeff", 1.0f);
+		mDeferredShader.uniform("phong_coeff", 0.0f);
+		mDeferredShader.uniform("two_sided", 0.8f);
+		//mDeferredShader.uniform("diff_coeff", 0.6f);
+		//mDeferredShader.uniform("phong_coeff", 0.3f);
+		//mDeferredShader.uniform("two_sided", 0.0f);
 		if (mRenderShadowCastersFunc) mRenderShadowCastersFunc(&mDeferredShader);
 		if (mRenderNonShadowCastersFunc) mRenderNonShadowCastersFunc(&mDeferredShader);
 		
@@ -375,14 +375,14 @@ private:
 			glMatrixMode(GL_MODELVIEW);
 			
 			for (size_t i = 0; i < 6; ++i) {
-				light->mShadowMap.bindDepthFramebuffer(i);
+				light->mCubeShadowMap.bindDepthFramebuffer(i);
 				glClear(GL_DEPTH_BUFFER_BIT);
 				
 				glLoadMatrixf(mLightFaceViewMatrices[i]);
 				glMultMatrixf(light->mShadowCam.getModelViewMatrix());
 				mRenderShadowCastersFunc(0);
+				light->mCubeShadowMap.unbindDepthFramebuffer(i);
 			}
-			
 			light->mCubeDepthFbo.unbindFramebuffer();
 		}
 
@@ -399,16 +399,16 @@ private:
 			//glReadBuffer(GL_BACK);
 			gl::setViewport(light->mShadowFBO.getBounds());
 			
-			glCullFace(GL_BACK); //don't need what we won't see
+			glCullFace(GL_BACK); // don't need what we won't see
 			
 			gl::setMatrices(mCamera->getCamera());
 			
 			mCubeShadowShader.bind();
 			
-			light->mShadowMap.bind(); //the magic texture
-			mCubeShadowShader.uniform("shadow", 0);
+			light->mCubeShadowMap.bind(); //the magic texture
+			mCubeShadowShader.uniform("shadowMap", 0);
 			
-			//conversion from world-space to camera-space (required here)
+			// conversion from world-space to camera-space (required here)
 			mCubeShadowShader.uniform("light_position", mCamera->getCamera().getModelViewMatrix().transformPointAffine(light->mShadowCam.getEyePoint()));
 			mCubeShadowShader.uniform("camera_view_matrix_inv", mCamera->getCamera().getInverseModelViewMatrix());
 			mCubeShadowShader.uniform("light_view_matrix", light->mShadowCam.getModelViewMatrix());
@@ -418,7 +418,7 @@ private:
 			if (mRenderShadowCastersFunc) { mRenderShadowCastersFunc(nullptr); }
 			if (mRenderNonShadowCastersFunc) { mRenderNonShadowCastersFunc(nullptr); }
 			
-			light->mShadowMap.unbind();
+			light->mCubeShadowMap.unbind();
 			glDisable(GL_TEXTURE_CUBE_MAP);
 			
 			mCubeShadowShader.unbind();
@@ -512,7 +512,7 @@ private:
 		mRandomNoise.bind(0);
 		mDeferredFBO.getTexture(1).bind(1);
 		mSSAOShader.bind();
-		mSSAOShader.uniform("rnm", 0);
+		mSSAOShader.uniform("randNoise", 0);
 		mSSAOShader.uniform("normalMap", 1);
 		
 		gl::drawSolidRect(Rectf(0, 0, mSSAOFBO.getWidth(), mSSAOFBO.getHeight()));

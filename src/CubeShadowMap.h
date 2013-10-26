@@ -48,9 +48,13 @@ public:
         glBindTexture(GL_TEXTURE_CUBE_MAP, mTexture);
     }
     
-    void bindDepthFramebuffer(const int face) const {
+    void bindDepthFramebuffer(int face) const {
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, mTexture, 0);
     }
+	
+	void unbindDepthFramebuffer(int face) const {
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, 0);
+	}
 
 	void unbind() const {
         glBindTexture(GL_TEXTURE_CUBE_MAP, 0);

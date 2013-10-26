@@ -3,34 +3,37 @@
 using namespace ci;
 
 class PointLight {
-	const float LIGHT_CUTOFF_DEFAULT = 0.01f;
-	const float LIGHT_BRIGHTNESS_DEFAULT = 100.0f;
+public:
+	static constexpr float LIGHT_BRIGHTNESS_DEFAULT = 60.0f;
 
 private:
+	static constexpr float LIGHT_CUTOFF_DEFAULT = 0.01f;
+
     Vec3f mPosition;
     Color mColor;
     float mRadius; // AOE = area of effect
+	float mBrightness;
     bool mVisible;
     
 public:
     CameraPersp mShadowCam;
-    CubeShadowMap mShadowMap;
+    CubeShadowMap mCubeShadowMap;
     gl::Fbo mCubeDepthFbo;
     gl::Fbo mShadowFBO;
     
 public:
-	PointLight(Vec3f position, Color color, int shadowMapRes, bool castShadows = false, bool visible = true) {
+	PointLight(Vec3f position, Color color, float brightness, int shadowMapRes, bool castShadows = false, bool visible = true) {
         mPosition = position;
 		setColor(color);
+		mBrightness = brightness;
         mVisible = visible;
         
-        //set up fake "light" to grab matrix calculations from
-        mShadowCam.setPerspective(90.0f, 1.0f, 1.0f, 100.0f);
+        mShadowCam.setPerspective(90, 1, 1, 10000);
         mShadowCam.lookAt(position, Vec3f(position.x, 0, position.z));
         
         if (castShadows) {
 			// set up cube map for point shadows
-			mShadowMap.setup(shadowMapRes);
+			mCubeShadowMap.setup(shadowMapRes);
 			
 			// create FBO to hold depth values from cube map
 			gl::Fbo::Format formatShadow;
@@ -60,19 +63,22 @@ public:
     
 	void setColor(const Color& color) {
         mColor = color;
-        mRadius = sqrt(mColor.length() / LIGHT_CUTOFF_DEFAULT * LIGHT_BRIGHTNESS_DEFAULT);
     }
     
     const Color& getColor() const {
         return mColor;
     }
 	
+	void setBrightness(float brightness) {
+		mBrightness = brightness;
+	}
+	
 	float getBrightness() const {
-		return LIGHT_BRIGHTNESS_DEFAULT;
+		return mBrightness;
 	}
     
     float getRadius() const {
-        return mRadius;
+        return sqrt(mColor.length() / LIGHT_CUTOFF_DEFAULT * mBrightness);
     }
     
     bool isVisible() const {

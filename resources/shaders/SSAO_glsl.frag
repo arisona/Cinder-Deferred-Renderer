@@ -1,7 +1,7 @@
 #version 120
 // http://www.gamerendering.com/2009/01/14/ssao/
 
-uniform sampler2D rnm;
+uniform sampler2D randomNoise;
 uniform sampler2D normalMap;
 
 varying vec2 uv;
@@ -43,14 +43,14 @@ void main(void) {
     pSphere[9] = vec3(0.035267662, -0.063188605, 0.54602677);
 
     //grab a normal for reflecting the sample rays later on
-    vec3 fres = normalize((texture2D(rnm, rand(uv) * offset * uv).xyz * 2.0) - vec3(1.0));
+    vec3 fres = normalize((texture2D(randomNoise, rand(uv) * offset * uv).xyz * 2.0) - vec3(1.0));
 
     vec4 currentPixelSample = texture2D(normalMap, uv);
 
     float currentPixelDepth = currentPixelSample.a;
 
     // current fragment coords in screen space
-    vec3 ep = vec3(uv.xy,currentPixelDepth);
+    vec3 ep = vec3(uv.xy, currentPixelDepth);
 
     // get the normal of current fragment
     vec3 norm = currentPixelSample.xyz;

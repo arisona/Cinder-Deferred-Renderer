@@ -178,7 +178,7 @@ void CinderDeferredRenderingApp::setup() {
                 color = Color(0.94f, 0.15f, 0.23f); // red
                 break;
         };
-        mRenderer.addLight(Vec3f(Rand::randFloat(-1000, 1000), Rand::randFloat(0, 50), Rand::randFloat(-1000, 1000)), color);
+        mRenderer.addLight(Vec3f(Rand::randFloat(-1000, 1000), Rand::randFloat(0, 100), Rand::randFloat(-1000, 1000)), color);
     }
 
 	// load texture for earth sphere (note: will be upside down)
@@ -191,12 +191,15 @@ void CinderDeferredRenderingApp::update() {
 
 void CinderDeferredRenderingApp::draw() {
 	if (mAnimate) {
+		double seconds = getElapsedSeconds();
 		auto lights = mRenderer.getLights();
 		for (int i = 0; i < lights.size(); ++i) {
 			if (lights[i]->isShadowCaster()) continue;
 			Vec3f pos = lights[i]->getPosition();
 			pos.rotateY(0.00001 * i * (i % 2 ? -1 : 1));
 			lights[i]->setPosition(pos);
+			
+			lights[i]->setBrightness(PointLight::LIGHT_BRIGHTNESS_DEFAULT + 2000 * sin(2 * seconds + i) * sin(2 * seconds + i));
 		}
 	}
     mRenderer.render(mRenderMode, mShadows, mSSAO);
@@ -298,49 +301,69 @@ void CinderDeferredRenderingApp::keyDown(KeyEvent event) {
 
 #pragma mark - render functions
 
-void CinderDeferredRenderingApp::drawShadowCasters(gl::GlslProg* shader) const {
+	void CinderDeferredRenderingApp::drawShadowCasters(gl::GlslProg* shader) const {
 	// render some test objects
-    if (shader != nullptr) {
-        shader->uniform("useTexture", 1.0f);
-        shader->uniform("tex", 0);
-        mTexture.bind(0);
-    }
-    
-    glColor3f(1, 0, 0);
-    gl::drawSphere(Vec3f(-1.0, 0.0,-1.0), 1.0f, 30);
-    
-    if (shader != nullptr) {
-        shader->uniform("useTexture", 0.0f);
-        mTexture.unbind(0);
-    }
-    
+	if (shader != nullptr) {
+		shader->uniform("useTexture", 1.0f);
+		shader->uniform("tex", 0);
+		mTexture.bind(0);
+	}
+
+	glColor3f(1, 0, 0);
+	gl::drawSphere(Vec3f(-1.0, 0.0, -1.0), 1.0f, 30);
+
+	if (shader != nullptr) {
+		shader->uniform("useTexture", 0.0f);
+		mTexture.unbind(0);
+	}
+
 	glColor3f(0, 1, 0);
-    gl::drawCube(Vec3f(1.0f, 0.0f, 1.0f), Vec3f(2.0f, 2.0f, 2.0f));
-    
-    glColor3f(1, 0, 1);
-    gl::drawCube(Vec3f(0.0f, 0.0f, 4.5f), Vec3f(1.0f, 2.0f, 1.0f));
-    
-    glColor3f(1, 1, 0);
-    gl::drawCube(Vec3f(3.0f, 0.0f, -1.5f), Vec3f(1.0f, 3.0f, 1.0f));
-    
+	gl::drawCube(Vec3f(1.0f, 0.0f, 1.0f), Vec3f(2.0f, 2.0f, 2.0f));
+
 	glColor3f(1, 0, 1);
-    gl::pushMatrices();
+	gl::drawCube(Vec3f(0.0f, 0.0f, 4.5f), Vec3f(1.0f, 2.0f, 1.0f));
+
+	glColor3f(1, 1, 0);
+	gl::drawCube(Vec3f(3.0f, 0.0f, -1.5f), Vec3f(1.0f, 3.0f, 1.0f));
+
+	glColor3f(1, 0, 1);
+	gl::pushMatrices();
 	glTranslatef(-2.0f, -0.7f, 2.0f);
-	glRotated(90.0f, 1, 0, 0);
-    gl::drawTorus(1.0f, 0.3f, 32, 64);
+	//glRotated(90.0f, 1, 0, 0);
+	glRotated(60.0f, 1, 1, 1);
+	gl::drawTorus(1.0f, 0.3f, 32, 64);
 	gl::popMatrices();
-}
+	}
 
 void CinderDeferredRenderingApp::drawNonShadowCasters(gl::GlslProg* shader) const {
-    //a plane to capture shadows (though it won't cast any itself)
-    glColor3ub(255, 255, 255);
-    glNormal3f(0.0f, 1.0f, 0.0f);
-    glBegin(GL_QUADS);
-    glVertex3i(SCENE_SIZE, -2,-SCENE_SIZE);
-    glVertex3i(-SCENE_SIZE, -2,-SCENE_SIZE);
-    glVertex3i(-SCENE_SIZE, -2, SCENE_SIZE);
-    glVertex3i(SCENE_SIZE, -2, SCENE_SIZE);
-    glEnd();
+	if (mAnimate) {
+		if (shader != nullptr) {
+			shader->uniform("useTexture", 1.0f);
+			shader->uniform("tex", 0);
+			mTexture.bind(0);
+		}
+	
+		gl::pushMatrices();
+		glRotated(20 * getElapsedSeconds(), 0, 1, 0);
+		glTranslatef(500, 50, 0);
+		gl::drawSphere(Vec3f(0, 0, 0), 50.0f, 30);
+		gl::popMatrices();
+	
+		if (shader != nullptr) {
+			shader->uniform("useTexture", 0.0f);
+			mTexture.unbind(0);
+		}
+	}
+
+	// a plane to capture shadows (though it won't cast any itself)
+	glColor3ub(255, 255, 255);
+	glNormal3f(0.0f, 1.0f, 0.0f);
+	glBegin(GL_QUADS);
+	glVertex3i(SCENE_SIZE, -2,-SCENE_SIZE);
+	glVertex3i(-SCENE_SIZE, -2,-SCENE_SIZE);
+	glVertex3i(-SCENE_SIZE, -2, SCENE_SIZE);
+	glVertex3i(SCENE_SIZE, -2, SCENE_SIZE);
+	glEnd();
 }
 
 CINDER_APP_BASIC(CinderDeferredRenderingApp, RendererGl)

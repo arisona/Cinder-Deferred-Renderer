@@ -6,6 +6,7 @@
 #version 120
 
 uniform sampler2D tex;
+
 uniform vec2 frameBufSize;
 
 varying vec2 uv;
