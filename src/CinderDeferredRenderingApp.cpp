@@ -301,7 +301,7 @@ void CinderDeferredRenderingApp::keyDown(KeyEvent event) {
 
 #pragma mark - render functions
 
-	void CinderDeferredRenderingApp::drawShadowCasters(gl::GlslProg* shader) const {
+void CinderDeferredRenderingApp::drawShadowCasters(gl::GlslProg* shader) const {
 	// render some test objects
 	if (shader != nullptr) {
 		shader->uniform("useTexture", 1.0f);
@@ -333,7 +333,7 @@ void CinderDeferredRenderingApp::keyDown(KeyEvent event) {
 	glRotated(60.0f, 1, 1, 1);
 	gl::drawTorus(1.0f, 0.3f, 32, 64);
 	gl::popMatrices();
-	}
+}
 
 void CinderDeferredRenderingApp::drawNonShadowCasters(gl::GlslProg* shader) const {
 	if (mAnimate) {

@@ -57,7 +57,6 @@ private:
 	Matrix44f mLightFaceViewMatrices[6];
     CubeShadowMap mCubeShadowMap;
     gl::Fbo mCubeDepthFBO;
-    gl::Fbo mCubeShadowFBO;
 
 	std::vector<PointLight*> mLights;
 
@@ -163,30 +162,24 @@ public:
 		formatCube.setWrap(GL_CLAMP, GL_CLAMP);
 		mCubeDepthFBO = gl::Fbo(mShadowMapResolution, mShadowMapResolution, formatCube);
 		
-		gl::Fbo::Format formatShadow;
-		// formatShadow.setDepthInternalFormat(GL_DEPTH_COMPONENT32);
-		formatShadow.setColorInternalFormat(GL_RGBA16F_ARB);
-		// formatShadow.setSamples(4); // enable 4x antialiasing
-		mCubeShadowFBO = gl::Fbo(mShadowMapResolution, mShadowMapResolution, formatShadow);
-		
 		//---- init shadow cube: axial matrices required for six-sides of calculations for cube shadows
 		CameraPersp cubeCam;
-		cubeCam.lookAt(Vec3f(0, 0, 0),  Vec3f(1, 0, 0),  Vec3f(0, -1, 0));
+		cubeCam.lookAt(Vec3f(0, 0, 0), Vec3f(1, 0, 0), Vec3f(0, -1, 0));
 		mLightFaceViewMatrices[CubeShadowMap::X_FACE_POS] = cubeCam.getModelViewMatrix();
 		
-		cubeCam.lookAt(Vec3f(0, 0, 0), Vec3f(-1, 0, 0),  Vec3f(0, -1, 0));
+		cubeCam.lookAt(Vec3f(0, 0, 0), Vec3f(-1, 0, 0), Vec3f(0, -1, 0));
 		mLightFaceViewMatrices[CubeShadowMap::X_FACE_NEG] = cubeCam.getModelViewMatrix();
 		
-		cubeCam.lookAt(Vec3f(0, 0, 0),  Vec3f(0, 1, 0), Vec3f(0, 0, 1));
+		cubeCam.lookAt(Vec3f(0, 0, 0), Vec3f(0, 1, 0), Vec3f(0, 0, 1));
 		mLightFaceViewMatrices[CubeShadowMap::Y_FACE_POS] = cubeCam.getModelViewMatrix();
 		
-		cubeCam.lookAt(Vec3f(0, 0, 0),  Vec3f(0.0,-1.0, 0.0),  Vec3f(0.0, 0.0,-1.0));
+		cubeCam.lookAt(Vec3f(0, 0, 0), Vec3f(0.0,-1.0, 0.0), Vec3f(0.0, 0.0,-1.0));
 		mLightFaceViewMatrices[CubeShadowMap::Y_FACE_NEG] = cubeCam.getModelViewMatrix();
 		
-		cubeCam.lookAt(Vec3f(0, 0, 0),  Vec3f(0, 0, 1),  Vec3f(0, -1, 0));
+		cubeCam.lookAt(Vec3f(0, 0, 0), Vec3f(0, 0, 1), Vec3f(0, -1, 0));
 		mLightFaceViewMatrices[CubeShadowMap::Z_FACE_POS] = cubeCam.getModelViewMatrix();
 		
-		cubeCam.lookAt(Vec3f(0, 0, 0),  Vec3f(0, 0, -1),  Vec3f(0, -1, 0));
+		cubeCam.lookAt(Vec3f(0, 0, 0), Vec3f(0, 0, -1), Vec3f(0, -1, 0));
 		mLightFaceViewMatrices[CubeShadowMap::Z_FACE_NEG] = cubeCam.getModelViewMatrix();
 		
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
@@ -364,7 +357,7 @@ private:
 		// original values:
 		mDeferredShader.uniform("diff_coeff", 1.0f);
 		mDeferredShader.uniform("phong_coeff", 0.0f);
-		mDeferredShader.uniform("two_sided", 0.8f);
+		mDeferredShader.uniform("two_sided", 0.0f);
 		//mDeferredShader.uniform("diff_coeff", 0.6f);
 		//mDeferredShader.uniform("phong_coeff", 0.3f);
 		//mDeferredShader.uniform("two_sided", 0.0f);
@@ -385,7 +378,6 @@ private:
 		glClearDepth(1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		mShadowFBO.unbindFramebuffer();
-		
 
 		for (auto light : mLights) {
 			if (!light->isShadowCaster())
@@ -417,26 +409,23 @@ private:
 			}
 			mCubeDepthFBO.unbindFramebuffer();
 
-			// 2. render each shadow layer to shadow fbo
-			
-			mCubeShadowFBO.bindFramebuffer();
-			
-			glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+			// 2. render each shadow layer to shadow fbo (via alpha blending)
 
-			gl::setViewport(mCubeShadowFBO.getBounds());
-			
 			glCullFace(GL_BACK); // don't need what we won't see
+			gl::enableAlphaBlending();
 			
+			mShadowFBO.bindFramebuffer();
+			gl::setViewport(mShadowFBO.getBounds());
+
 			gl::setMatrices(mCamera->getCamera());
 			
 			mCubeShadowShader.bind();
-			
-			mCubeShadowMap.bind(); //the magic texture
+			mCubeShadowMap.bind();
 			mCubeShadowShader.uniform("shadowMap", 0);
 			
 			// conversion from world-space to camera-space (required here)
-			mCubeShadowShader.uniform("light_position", mCamera->getCamera().getModelViewMatrix().transformPointAffine(light->mShadowCam.getEyePoint()));
+			mCubeShadowShader.uniform("light_position",
+									  mCamera->getCamera().getModelViewMatrix().transformPointAffine(light->mShadowCam.getEyePoint()));
 			mCubeShadowShader.uniform("camera_view_matrix_inv", mCamera->getCamera().getInverseModelViewMatrix());
 			mCubeShadowShader.uniform("light_view_matrix", light->mShadowCam.getModelViewMatrix());
 			mCubeShadowShader.uniform("light_projection_matrix", light->mShadowCam.getProjectionMatrix());
@@ -446,27 +435,13 @@ private:
 			if (mRenderNonShadowCastersFunc) { mRenderNonShadowCastersFunc(nullptr); }
 			
 			mCubeShadowMap.unbind();
-			glDisable(GL_TEXTURE_CUBE_MAP);
-			
 			mCubeShadowShader.unbind();
 			
-			mCubeShadowFBO.unbindFramebuffer();
-
-			glDisable(GL_CULL_FACE);
-		
-			// 3. render shadow layer to final FBO (via blending)
-			mShadowFBO.bindFramebuffer();
-			gl::setViewport(mShadowFBO.getBounds());
-			gl::setMatricesWindow((float)mShadowFBO.getWidth(), (float)mShadowFBO.getHeight(), false);
-			gl::enableAlphaBlending();
-
-			mCubeShadowFBO.getTexture().bind();
-			gl::drawSolidRect(Rectf(0, 0, mShadowFBO.getWidth(), mShadowFBO.getHeight()));
-			mCubeShadowFBO.getTexture().unbind();
 			mShadowFBO.unbindFramebuffer();
+
+			gl::disableAlphaBlending();
+			glDisable(GL_CULL_FACE);
 		}
-		
-		gl::disableAlphaBlending();
 	}
 	
 	void renderLightsToFBO() {
