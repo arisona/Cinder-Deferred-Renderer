@@ -338,12 +338,13 @@ private:
 		renderLightGeometry();
 		
 		// render deferred geometry
-		//mDeferredShader.uniform("diff_coeff", 0.4f);
-		//mDeferredShader.uniform("phong_coeff", 0.3f);
+		// original values:
+		//mDeferredShader.uniform("diff_coeff", 1.0f);
+		//mDeferredShader.uniform("phong_coeff", 0.0f);
 		//mDeferredShader.uniform("two_sided", 0.8f);
-		mDeferredShader.uniform("diff_coeff", 1.0f);
-		mDeferredShader.uniform("phong_coeff", 0.0f);
-		mDeferredShader.uniform("two_sided", 0.8f);
+		mDeferredShader.uniform("diff_coeff", 0.6f);
+		mDeferredShader.uniform("phong_coeff", 0.3f);
+		mDeferredShader.uniform("two_sided", 0.0f);
 		if (mRenderShadowCastersFunc) mRenderShadowCastersFunc(&mDeferredShader);
 		if (mRenderNonShadowCastersFunc) mRenderNonShadowCastersFunc(&mDeferredShader);
 		

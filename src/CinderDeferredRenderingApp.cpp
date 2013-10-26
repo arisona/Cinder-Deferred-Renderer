@@ -83,10 +83,11 @@ public:
     
     void mouseDown(MouseEvent event);
 	void mouseDrag(MouseEvent event);
+	void mouseWheel(MouseEvent event);
     void keyDown(app::KeyEvent event);
     
     void drawShadowCasters(gl::GlslProg* shader) const;
-    void drawNoShadowCasters(gl::GlslProg* shader) const;
+    void drawNonShadowCasters(gl::GlslProg* shader) const;
     
 private:
 	
@@ -145,9 +146,9 @@ void CinderDeferredRenderingApp::setup() {
 	
     // create functions pointers to send to deferred renderer
 	auto shadowCasterFunc = std::bind(&CinderDeferredRenderingApp::drawShadowCasters, this, std::placeholders::_1);
-	auto noShadowCasterFunc = std::bind(&CinderDeferredRenderingApp::drawNoShadowCasters, this, std::placeholders::_1);
+	auto nonShadowCasterFunc = std::bind(&CinderDeferredRenderingApp::drawNonShadowCasters, this, std::placeholders::_1);
 	
-	mRenderer.setup(shadowCasterFunc, noShadowCasterFunc, &mCamera, Vec2i(APP_RES_HORIZONTAL, APP_RES_VERTICAL), 1024);
+	mRenderer.setup(shadowCasterFunc, nonShadowCasterFunc, &mCamera, Vec2i(APP_RES_HORIZONTAL, APP_RES_VERTICAL), 1024);
     
     // have these point lights cast shadows
     mRenderer.addLight(Vec3f(-2.0f, 4.0f, 6.0f), Color(0.10f, 0.69f, 0.93f), true);
@@ -204,13 +205,15 @@ void CinderDeferredRenderingApp::draw() {
 }
 
 void CinderDeferredRenderingApp::mouseDown(MouseEvent event) {
-	if (event.isAltDown())
-		mCamera.mouseDown(event.getPos());
+	mCamera.mouseDown(event.getPos());
 }
 
 void CinderDeferredRenderingApp::mouseDrag(MouseEvent event) {
-	if (event.isAltDown())
-		mCamera.mouseDrag(event.getPos(), event.isLeftDown(), event.isMiddleDown(), event.isRightDown());
+	mCamera.mouseDrag(event.getPos(), event.isLeftDown(), event.isMiddleDown(), event.isRightDown());
+}
+
+void CinderDeferredRenderingApp::mouseWheel(MouseEvent event) {
+	// XXX tbd
 }
 
 void CinderDeferredRenderingApp::keyDown(KeyEvent event) {
@@ -220,12 +223,6 @@ void CinderDeferredRenderingApp::keyDown(KeyEvent event) {
     float lightMoveInc = 0.1f;
 
 	switch (event.getCode()) {
-		case KeyEvent::KEY_a:
-			mSSAO = !mSSAO;
-			break;
-		case KeyEvent::KEY_s:
-			mShadows = !mShadows;
-			break;
 		case KeyEvent::KEY_0:
 			mRenderMode = DeferredRenderer::SHOW_FINAL_VIEW;
 			break;
@@ -259,9 +256,9 @@ void CinderDeferredRenderingApp::keyDown(KeyEvent event) {
 
 		// change which light you want to control
         case KeyEvent::KEY_COMMA:
-                mCurrentLightIndex--;
-                if (mCurrentLightIndex < 0)
-					mCurrentLightIndex = mRenderer.getLights().size() - 1;
+			mCurrentLightIndex--;
+			if (mCurrentLightIndex < 0)
+				mCurrentLightIndex = mRenderer.getLights().size() - 1;
             break;
         case KeyEvent::KEY_PERIOD:
 			mCurrentLightIndex++;
@@ -290,6 +287,7 @@ void CinderDeferredRenderingApp::keyDown(KeyEvent event) {
 		case KeyEvent::KEY_RIGHT:
 			mRenderer.getLights().at(mCurrentLightIndex)->setPosition(mRenderer.getLights().at(mCurrentLightIndex)->getPosition() + Vec3f(-lightMoveInc, 0, 0));
             break;
+
         case KeyEvent::KEY_ESCAPE:
             exit(1);
 			break;
@@ -333,7 +331,7 @@ void CinderDeferredRenderingApp::drawShadowCasters(gl::GlslProg* shader) const {
 	gl::popMatrices();
 }
 
-void CinderDeferredRenderingApp::drawNoShadowCasters(gl::GlslProg* shader) const {
+void CinderDeferredRenderingApp::drawNonShadowCasters(gl::GlslProg* shader) const {
     //a plane to capture shadows (though it won't cast any itself)
     glColor3ub(255, 255, 255);
     glNormal3f(0.0f, 1.0f, 0.0f);
