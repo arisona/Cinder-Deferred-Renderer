@@ -462,7 +462,7 @@ private:
 		mLightShader.bind(); //bind point light pixel shader
 		mDeferredFBO.getTexture(0).bind(0); // bind color tex
 		mDeferredFBO.getTexture(1).bind(1); // bind normal tex
-		mDeferredFBO.getTexture(2).bind(2); // bind position, normal and color textures from deferred shading pass
+		mDeferredFBO.getTexture(2).bind(2); // bind position tex
 		mDeferredFBO.getTexture(3).bind(3); // bind attr tex
 		mLightShader.uniform("colorMap", 0);
 		mLightShader.uniform("normalMap", 1);
@@ -504,18 +504,17 @@ private:
 		glClearDepth(1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
+		mSSAOShader.bind();
 		mDeferredFBO.getTexture(1).bind(0);
 		mRandomNoise.bind(1);
-		mSSAOShader.bind();
 		mSSAOShader.uniform("normalMap", 0);
 		mSSAOShader.uniform("randomNoise", 1);
 		
 		gl::drawSolidRect(Rectf(0, 0, mSSAOFBO.getWidth(), mSSAOFBO.getHeight()));
 		
-		mSSAOShader.unbind();
-		
 		mDeferredFBO.getTexture(1).unbind(0);
 		mRandomNoise.unbind(1);
+		mSSAOShader.unbind();
 		
 		mSSAOFBO.unbindFramebuffer();
 	}

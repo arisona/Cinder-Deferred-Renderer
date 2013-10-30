@@ -13,12 +13,12 @@ const float offset = 0.02;
 const float falloff = 0.01;
 const float rad = 0.02;
 
-const float invSamples = -0.5/20.0;
+const float invSamples = 1 / 10.0;
 
 // NOTE: THIS ONE IS BRUTALLY OPTIMIZED!! SO IT*S REALLY HARD TO FOLLOW
 
 float rand(vec2 co) {
-    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+    return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
 void main(void) {
@@ -70,5 +70,5 @@ void main(void) {
     }
 
     // output the result
-    gl_FragColor.r = 1.0 + bl * invSamples;
+    gl_FragColor.r = 1.0 - bl * invSamples;
 }
