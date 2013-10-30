@@ -504,18 +504,18 @@ private:
 		glClearDepth(1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		mRandomNoise.bind(0);
-		mDeferredFBO.getTexture(1).bind(1);
+		mDeferredFBO.getTexture(1).bind(0);
+		mRandomNoise.bind(1);
 		mSSAOShader.bind();
-		mSSAOShader.uniform("randNoise", 0);
-		mSSAOShader.uniform("normalMap", 1);
+		mSSAOShader.uniform("normalMap", 0);
+		mSSAOShader.uniform("randomNoise", 1);
 		
 		gl::drawSolidRect(Rectf(0, 0, mSSAOFBO.getWidth(), mSSAOFBO.getHeight()));
 		
 		mSSAOShader.unbind();
 		
-		mDeferredFBO.getTexture(1).unbind(1);
-		mRandomNoise.unbind(0);
+		mDeferredFBO.getTexture(1).unbind(0);
+		mRandomNoise.unbind(1);
 		
 		mSSAOFBO.unbindFramebuffer();
 	}

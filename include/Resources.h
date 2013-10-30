@@ -26,13 +26,6 @@
 #define SHADER_ALPHA_RGB_FRAG	CINDER_RESOURCE(../resources/shaders/, AlphaToRGB_glsl.frag, 140, GLSL)
 
 
-
-
-
-
-
-
-
 //test Image
 #define RES_EARTH_TEX                   CINDER_RESOURCE(../resources/, Earth_from_NASA.jpg, 148, IMAGE)
 
