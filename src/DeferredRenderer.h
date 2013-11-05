@@ -350,7 +350,7 @@ private:
 		mDeferredShader.uniform("diff_coeff", 0.15f);
 		mDeferredShader.uniform("phong_coeff", 0.3f);
 		mDeferredShader.uniform("two_sided", 0.8f);
-		mDeferredShader.uniform("useTexture", 0.0f);
+		mDeferredShader.uniform("useTexture", 0);
 		renderLightGeometry();
 		
 		// render deferred geometry

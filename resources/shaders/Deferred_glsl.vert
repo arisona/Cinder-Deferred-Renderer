@@ -12,5 +12,5 @@ void main(void) {
     vec4 tmp = gl_ModelViewMatrix * gl_Vertex;
 	position = tmp.xyz/tmp.w;
 	normal = gl_NormalMatrix * gl_Normal;
-    depth = -position.z * 0.1;
+    depth = -position.z;
 }

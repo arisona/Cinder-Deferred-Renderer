@@ -61,7 +61,7 @@ void main(void) {
 		vec4 occluderFragment = texture2D(normalMap, ep.xy + sign(dot(ray, norm)) * ray.xy);
 
 		// if depthDifference is negative = occluder is behind current fragment
-		float depthDifference = currentPixelDepth - occluderFragment.a;
+		float depthDifference = 0.1 * (currentPixelDepth - occluderFragment.a);
 
 		// the falloff equation, starts at falloff and is kind of 1/x^2 falling
 		bl += step(falloff, depthDifference) *

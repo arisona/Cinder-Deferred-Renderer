@@ -305,7 +305,7 @@ void CinderDeferredRenderingApp::keyDown(KeyEvent event) {
 void CinderDeferredRenderingApp::drawShadowCasters(gl::GlslProg* shader) const {
 	// render some test objects
 	if (shader != nullptr) {
-		shader->uniform("useTexture", 1.0f);
+		shader->uniform("useTexture", 1);
 		shader->uniform("tex", 0);
 		mTexture.bind(0);
 	}
@@ -314,7 +314,7 @@ void CinderDeferredRenderingApp::drawShadowCasters(gl::GlslProg* shader) const {
 	gl::drawSphere(Vec3f(-1.0, 0.0, -1.0), 1.0f, 30);
 
 	if (shader != nullptr) {
-		shader->uniform("useTexture", 0.0f);
+		shader->uniform("useTexture", 0);
 		mTexture.unbind(0);
 	}
 
