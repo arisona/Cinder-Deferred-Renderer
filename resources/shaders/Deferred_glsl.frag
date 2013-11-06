@@ -25,6 +25,6 @@ void main(void) {
     
 	gl_FragData[0] = color;
 	gl_FragData[1] = vec4(n, position.z);
-    gl_FragData[2] = vec4(position, 1.0);
+    gl_FragData[2] = vec4(position.xyz, 1.0);
 	gl_FragData[3] = vec4(diff_coeff, phong_coeff, two_sided, 1.0);
 }

@@ -43,7 +43,7 @@ private:
 	gl::GlslProg mVBlurShader;
 	gl::GlslProg mBlenderShader;
 	gl::GlslProg mFXAAShader;
-	gl::GlslProg mAlphaToRBGShader;
+	gl::GlslProg mAlphaToRGBShader;
 
 	gl::Fbo mDeferredFBO;
 	gl::Fbo mShadowFBO;
@@ -116,22 +116,22 @@ public:
 		mBlenderShader		= gl::GlslProg(ssuvVert, loadResource(SHADER_BLENDER_FRAG));
 		mFXAAShader			= gl::GlslProg(ssuvVert, loadResource(SHADER_FXAA_FRAG));
 
-		mAlphaToRBGShader	= gl::GlslProg(ssuvVert, loadResource(SHADER_ALPHA_RGB_FRAG));
+		mAlphaToRGBShader	= gl::GlslProg(ssuvVert, loadResource(SHADER_ALPHA_RGB_FRAG));
 		
 		//---- init FBOs
 		
-		// special fbo format for deferred buffer
+		// special fbo format for g-buffer
 		// 4 color attachments:
 		// - diffuse color (rgba)
 		// - normal + depth (rgb + a)
 		// - position (rgb + a ignored)
 		// - diff_coeff + phong_coeff + two_sides (rgb + a ignored)
 		// XXX: currently, the depth buffer isn't used (16bit float depth stored in color attachment)
-		gl::Fbo::Format mtRFBO;
+		gl::Fbo::Format gbufferFormat;
 		//mtRFBO.enableDepthBuffer();
 		//mtRFBO.setDepthInternalFormat(GL_DEPTH_COMPONENT32);
-		mtRFBO.setColorInternalFormat(GL_RGBA16F_ARB);
-		mtRFBO.enableColorBuffer(true, 4);
+		gbufferFormat.setColorInternalFormat(GL_RGBA16F_ARB);
+		gbufferFormat.enableColorBuffer(true, 4);
 		//mtRFBO.setSamples(4); // enable 4x antialiasing
 		
 		// standard fbo format for all others
@@ -139,7 +139,7 @@ public:
 		//format.setSamples(4); // enable 4x antialiasing
 		
 		// init screen space render
-		mDeferredFBO = gl::Fbo(mFBOResolution.x, mFBOResolution.y, mtRFBO);
+		mDeferredFBO = gl::Fbo(mFBOResolution.x, mFBOResolution.y, gbufferFormat);
 		mShadowFBO = gl::Fbo(mFBOResolution.x, mFBOResolution.y, format);
 		mLightFBO = gl::Fbo(mFBOResolution.x, mFBOResolution.y, format);
 		mSSAOFBO = gl::Fbo(mFBOResolution.x / 2, mFBOResolution.y / 2, format);
@@ -266,10 +266,10 @@ public:
 				gl::setViewport(getWindowBounds());
 				gl::setMatricesWindow(getWindowSize(), false);
 				mDeferredFBO.getTexture(1).bind(0);
-				mAlphaToRBGShader.bind();
-				mAlphaToRBGShader.uniform("tex", 0);
+				mAlphaToRGBShader.bind();
+				mAlphaToRGBShader.uniform("tex", 0);
 				gl::drawSolidRect(Rectf(0, 0, getWindowWidth(), getWindowHeight()));
-				mAlphaToRBGShader.unbind();
+				mAlphaToRGBShader.unbind();
 				mDeferredFBO.getTexture(1).unbind(0);
 				break;
 				
