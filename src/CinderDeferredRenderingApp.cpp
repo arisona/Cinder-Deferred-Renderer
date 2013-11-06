@@ -45,10 +45,8 @@
 #include "cinder/MayaCamUI.h"
 #include "cinder/params/Params.h"
 #include "cinder/Rand.h"
-
-//#include "boost/function.hpp"
-//#include "boost/bind.hpp"
-//#include <boost/lambda/lambda.hpp>
+#include "cinder/TriMesh.h"
+#include "cinder/ObjLoader.h"
 
 #include "CubeShadowMap.h"
 #include "DeferredRenderer.h"
@@ -98,14 +96,15 @@ private:
     DeferredRenderer::RenderMode mRenderMode = DeferredRenderer::SHOW_FINAL_VIEW;
 
 	bool mAnimate = false;
-	bool mShadows = true;
-	bool mSSAO = true;
+	bool mShadows = false;
+	bool mSSAO = false;
 	
     DeferredRenderer mRenderer;
 
     MayaCamUI mCamera;
 	
 	gl::Texture mTexture;
+	cinder::TriMesh mMesh;
     
     int mCurrentLightIndex = 0;
 };
@@ -118,7 +117,7 @@ CinderDeferredRenderingApp::~CinderDeferredRenderingApp() {}
 
 void CinderDeferredRenderingApp::prepareSettings(Settings* settings) {
 	settings->setWindowSize(APP_RES_HORIZONTAL, APP_RES_VERTICAL);
-    settings->setBorderless(true);
+    settings->setBorderless(false);
 	settings->setFrameRate(1000.0f);
 	settings->setResizable(false);
     settings->setFullScreen(false);
@@ -184,6 +183,8 @@ void CinderDeferredRenderingApp::setup() {
 
 	// load texture for earth sphere (note: will be upside down)
 	mTexture = gl::Texture(loadImage(loadResource(RES_EARTH_TEX)));
+	ObjLoader loader(loadResource(RES_NW_OBJ));
+	loader.load(&mMesh);
 }
 
 void CinderDeferredRenderingApp::update() {
@@ -330,9 +331,13 @@ void CinderDeferredRenderingApp::drawShadowCasters(gl::GlslProg* shader) const {
 	glColor3f(1, 0, 1);
 	gl::pushMatrices();
 	glTranslatef(-2.0f, -0.7f, 2.0f);
-	//glRotated(90.0f, 1, 0, 0);
 	glRotated(60.0f, 1, 1, 1);
 	gl::drawTorus(1.0f, 0.3f, 32, 64);
+	gl::popMatrices();
+	
+	gl::pushMatrices();
+	glTranslatef(6.0f, 0.0f, 4.0f);
+	gl::draw(mMesh);
 	gl::popMatrices();
 }
 

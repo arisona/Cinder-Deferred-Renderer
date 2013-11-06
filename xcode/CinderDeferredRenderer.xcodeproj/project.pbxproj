@@ -16,6 +16,7 @@
 		00BAE65A0E7ED9C10018A608 /* CinderDeferredRenderingApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00BAE6590E7ED9C10018A608 /* CinderDeferredRenderingApp.cpp */; };
 		00CCAF15116A9FEE008396D5 /* CinderApp.icns in Resources */ = {isa = PBXBuildFile; fileRef = 00CCAF14116A9FEE008396D5 /* CinderApp.icns */; };
 		0C76FBCD181A06740011F61C /* random.png in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBB9181A06740011F61C /* random.png */; };
+		0CB26E01182A18BE00A09B30 /* nw_0.obj in Resources */ = {isa = PBXBuildFile; fileRef = 0CB26E00182A18BE00A09B30 /* nw_0.obj */; };
 		0CC41459181A09DD00B200FC /* AlphaToRGB_glsl.frag in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBA5181A06740011F61C /* AlphaToRGB_glsl.frag */; };
 		0CC4145B181A09DD00B200FC /* BasicBlender_glsl.frag in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBA7181A06740011F61C /* BasicBlender_glsl.frag */; };
 		0CC4145D181A09DD00B200FC /* Blur_h_glsl.frag in Resources */ = {isa = PBXBuildFile; fileRef = 0C76FBA9181A06740011F61C /* Blur_h_glsl.frag */; };
@@ -60,6 +61,7 @@
 		0C76FBB7181A06740011F61C /* SSAO_glsl.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = SSAO_glsl.frag; sourceTree = "<group>"; };
 		0C76FBB9181A06740011F61C /* random.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = random.png; sourceTree = "<group>"; };
 		0CAEB3491819FB61008CCF3B /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		0CB26E00182A18BE00A09B30 /* nw_0.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = nw_0.obj; path = ../resources/nw_0.obj; sourceTree = "<group>"; };
 		0CD444D9181A3F9500BC2026 /* ScreenSpaceUV.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = ScreenSpaceUV.vert; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
@@ -198,6 +200,7 @@
 				0C76FBA4181A06740011F61C /* shaders */,
 				0C76FBB8181A06740011F61C /* textures */,
 				DF29E54616FE998200F37AC9 /* Earth_from_NASA.jpg */,
+				0CB26E00182A18BE00A09B30 /* nw_0.obj */,
 				8D1107310486CEB800E47090 /* Info.plist */,
 				00CCAF14116A9FEE008396D5 /* CinderApp.icns */,
 			);
@@ -289,6 +292,7 @@
 				00CCAF15116A9FEE008396D5 /* CinderApp.icns in Resources */,
 				0C76FBCD181A06740011F61C /* random.png in Resources */,
 				DF29E54716FE998200F37AC9 /* Earth_from_NASA.jpg in Resources */,
+				0CB26E01182A18BE00A09B30 /* nw_0.obj in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
