@@ -15,8 +15,6 @@ const float rad = 0.02;
 
 const float invSamples = 1 / 10.0;
 
-// NOTE: THIS ONE IS BRUTALLY OPTIMIZED!! SO IT*S REALLY HARD TO FOLLOW
-
 float rand(vec2 co) {
     return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
 }
@@ -46,9 +44,6 @@ void main(void) {
 
     float currentPixelDepth = currentPixelSample.a;
 
-    // current fragment coords in screen space
-    vec3 ep = vec3(uv.xy, currentPixelDepth);
-
     // get the normal of current fragment
     vec3 norm = currentPixelSample.xyz;
 
@@ -58,10 +53,10 @@ void main(void) {
 		vec3 ray = rad * reflect(sphere[i], fres);
 
 		// get the depth of the occluder fragment
-		vec4 occluderFragment = texture2D(normalMap, ep.xy + sign(dot(ray, norm)) * ray.xy);
+		vec4 occluderFragment = texture2D(normalMap, uv.xy + sign(dot(ray, norm)) * ray.xy);
 
-		// if depthDifference is negative = occluder is behind current fragment
-		float depthDifference = 0.1 * (currentPixelDepth - occluderFragment.a);
+		// if depthDifference is positive = occluder is behind current fragment
+		float depthDifference = 0.1 * (occluderFragment.a - currentPixelDepth);
 
 		// the falloff equation, starts at falloff and is kind of 1/x^2 falling
 		bl += step(falloff, depthDifference) *

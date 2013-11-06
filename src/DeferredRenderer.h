@@ -126,7 +126,7 @@ public:
 		// - normal + depth (rgb + a)
 		// - position (rgb + a ignored)
 		// - diff_coeff + phong_coeff + two_sides (rgb + a ignored)
-		// XXX: currently, the depth buffer isn't used (depth stored in color attachment)
+		// XXX: currently, the depth buffer isn't used (16bit float depth stored in color attachment)
 		gl::Fbo::Format mtRFBO;
 		//mtRFBO.enableDepthBuffer();
 		//mtRFBO.setDepthInternalFormat(GL_DEPTH_COMPONENT32);
@@ -136,8 +136,6 @@ public:
 		
 		// standard fbo format for all others
 		gl::Fbo::Format format;
-		//format.setDepthInternalFormat(GL_DEPTH_COMPONENT32);
-		//format.setColorInternalFormat(GL_RGBA16F_ARB);
 		//format.setSamples(4); // enable 4x antialiasing
 		
 		// init screen space render
